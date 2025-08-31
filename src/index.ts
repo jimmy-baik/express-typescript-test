@@ -1,11 +1,16 @@
 import express from 'express';
 import session from 'express-session';
+import passport from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
+import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import path from 'node:path'
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
+import type { User } from './models/users.js';
 import { FilesystemPostRepository } from './repositories/postRepository.js';
+import { FilesystemUserRepository } from './repositories/userRepository.js';
 
 // 환경변수 불러오기
 dotenv.config();
@@ -33,7 +38,62 @@ app.use(session({
     secret: process.env.SESSION_SECRET_KEY || 'placeholder-secret-key',
     resave: false,
     saveUninitialized: false
-}))
+}));
+
+
+// 게시글 Repository 설정
+const postsDirectory = './src/data/posts';
+const postsRepository = new FilesystemPostRepository(postsDirectory);
+
+// 유저 Repository 설정
+const usersDirectory = './src/data/users';
+const usersRepository = new FilesystemUserRepository(usersDirectory);
+
+
+// passport 설정
+app.use(passport.initialize());
+app.use(passport.session());
+
+// passport local strategy 설정
+passport.use(new LocalStrategy({
+    usernameField: 'username',
+    passwordField: 'password'
+}, async (username, password, done) => { // verify 함수
+    try {
+
+        const user = await usersRepository.getUser(username);
+        if (!user) {
+            return done(null, false);
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.hashed_password);
+        if (!isPasswordValid) {
+            return done(null, false);
+        }
+
+        return done(null, user);
+
+    } catch (err) {
+        return done(err);
+    }
+}));
+
+passport.serializeUser((user, done) => {
+    if ('username' in user && user.username !== undefined) {
+        done(null, user.username);
+    } else {
+        done(new Error('정상적인 User 객체가 아닙니다.'));
+    }
+});
+
+passport.deserializeUser(async (username: string, done) => {
+    try {
+        const user = await usersRepository.getUser(username);
+        done(null, user);
+    } catch (err) {
+        done(err);
+    }
+});
 
 app.get('/', (req, res) => {
     res.send("Hello!");
@@ -48,9 +108,11 @@ app.get('/params-example/:userSuppliedParameter', (req,res) => {
     res.render('index', {title: 'Params Example', body: paramsString});
 });
 
-// 게시글 Repository 설정
-const postsDirectory = './src/data/posts';
-const postsRepository = new FilesystemPostRepository(postsDirectory);
+app.get('/login', (req, res) => {
+    res.render('login', {title: 'Login'});
+});
+
+app.post('/login', passport.authenticate('local', {successRedirect: '/posts', failureRedirect: '/login'}));
 
 // 게시글 CRUD
 app.get('/posts', async (req, res, next) => {

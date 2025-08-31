@@ -115,6 +115,13 @@ app.get('/login', (req, res) => {
 
 app.post('/login', passport.authenticate('local', {successRedirect: '/posts', failureRedirect: '/login'}));
 
+// 로그인 강제 미들웨어
+function requireLogin(req: express.Request, res: express.Response, next: express.NextFunction) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/login');
+}
 
 // user 생성
 app.post('/users', async (req, res, next) => {

@@ -141,17 +141,22 @@ app.post('/users', async (req, res, next) => {
 });
 
 // 게시글 CRUD
-app.get('/posts', async (req, res, next) => {
-    try {
-        const posts = await postsRepository.getAllPosts();
-        console.log(posts);
-        res.render('posts', {title: '게시글 목록', posts: posts});
-    } catch (err) {
-        next(err);
+app.get('/posts',
+    requireLogin,
+    async (req, res, next) => {
+        try {
+            const posts = await postsRepository.getAllPosts();
+            console.log(posts);
+            res.render('posts', {title: '게시글 목록', posts: posts});
+        } catch (err) {
+            next(err);
+        }
     }
-});
+);
 
-app.post('/posts', async (req, res, next) => {
+app.post('/posts',
+    requireLogin,
+    async (req, res, next) => {
     try {
         // 요청 데이터 검증
         if (!req.body || !req.body.title || !req.body.content) {
@@ -177,7 +182,9 @@ app.post('/posts', async (req, res, next) => {
     }
 });
 
-app.get('/posts/new', async (req, res, next) => {
+app.get('/posts/new',
+    requireLogin,
+    async (req, res, next) => {
     try {
         res.render('new-post', {title: '새 게시글'});
     } catch (err) {
@@ -185,7 +192,9 @@ app.get('/posts/new', async (req, res, next) => {
     }
 });
 
-app.get('/posts/:postId', async (req,res) => {
+app.get('/posts/:postId',
+    requireLogin,
+    async (req,res) => {
     try {
         const postId = String(req.params.postId);
         const post = await postsRepository.getPost(postId);
@@ -202,7 +211,9 @@ app.patch('/posts/:postId', (req,res) => {
     throw new Error('아직 구현되지 않았습니다.');
 });
 
-app.delete('/posts/:postId', async (req, res) => {
+app.delete('/posts/:postId',
+    requireLogin,
+    async (req, res) => {
     try {
         await postsRepository.deletePost(String(req.params.postId));
         res.redirect(303, '/posts');

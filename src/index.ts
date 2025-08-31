@@ -1,5 +1,5 @@
 import express from 'express';
-import { xss } from 'express-xss-sanitizer';
+import helmet from 'helmet';
 import path from 'node:path'
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
@@ -21,8 +21,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// XSS 방지
-app.use(xss());
+// 보안 헤더
+app.use(helmet());
 
 
 app.get('/', (req, res) => {

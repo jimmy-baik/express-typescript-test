@@ -108,11 +108,30 @@ app.get('/params-example/:userSuppliedParameter', (req,res) => {
     res.render('index', {title: 'Params Example', body: paramsString});
 });
 
+// 로그인
 app.get('/login', (req, res) => {
     res.render('login', {title: 'Login'});
 });
 
 app.post('/login', passport.authenticate('local', {successRedirect: '/posts', failureRedirect: '/login'}));
+
+
+// user 생성
+app.post('/users', async (req, res, next) => {
+    if (!req.body || !req.body.username || !req.body.password) {
+        return res.status(400).json({
+            error: '잘못된 요청입니다.',
+            message: '아이디와 비밀번호를 입력해주세요.'
+        });
+    }
+
+    try {
+        await usersRepository.createUser(req.body.username, req.body.password);
+        res.redirect('/login');
+    } catch (err) {
+        next(err);
+    }
+});
 
 // 게시글 CRUD
 app.get('/posts', async (req, res, next) => {

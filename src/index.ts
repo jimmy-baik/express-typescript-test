@@ -1,9 +1,14 @@
 import express from 'express';
+import session from 'express-session';
+import dotenv from 'dotenv';
 import helmet from 'helmet';
 import path from 'node:path'
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { FilesystemPostRepository } from './repositories/postRepository.js';
+
+// 환경변수 불러오기
+dotenv.config();
 
 const app = express();
 const port = 3002;
@@ -23,7 +28,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // 보안 헤더
 app.use(helmet());
-
+// 세션 설정
+app.use(session({
+    secret: process.env.SESSION_SECRET_KEY || 'placeholder-secret-key',
+    resave: false,
+    saveUninitialized: false
+}))
 
 app.get('/', (req, res) => {
     res.send("Hello!");

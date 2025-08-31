@@ -50,6 +50,23 @@ export class FilesystemPostRepository {
         return sortedData;
     }
 
+    async getPost(postId: string): Promise<Post|null> {
+        try {
+            const filePath = path.join(this.dataDirectoryPath, postId + '.json');
+            const fileContent = await readFile(filePath, 'utf-8');
+            const jsonData = JSON.parse(fileContent);
+            return {
+                id: jsonData.id,
+                timestamp: new Date(jsonData.timestamp),
+                title: jsonData.title,
+                content: jsonData.contentme
+            }
+        } catch (err) {
+            console.log(err);
+            return null;
+        }
+    }
+
     async createPost(post: Post): Promise<string> {
 
         const fileName = post.id + '.json';

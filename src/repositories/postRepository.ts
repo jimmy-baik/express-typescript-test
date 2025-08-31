@@ -6,7 +6,7 @@ import type { Post } from '../models/posts.js';
 
 
 
-class FilesystemPostRepository {
+export class FilesystemPostRepository {
     private dataDirectoryPath: string;
 
     constructor(dataDirectoryPath: string) {

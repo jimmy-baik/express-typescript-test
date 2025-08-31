@@ -3,4 +3,5 @@ export interface Post {
     timestamp: Date
     title: string
     content: string
+    createdBy: string
 }

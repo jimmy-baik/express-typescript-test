@@ -46,6 +46,12 @@
             font-style: italic;
         }
         
+        .post-author {
+            margin-left: 15px;
+            color: #495057;
+            font-weight: 500;
+        }
+        
         .post-content {
             line-height: 1.7;
             color: #333;
@@ -118,6 +124,7 @@
                         minute: '2-digit'
                     }) %>
                 </time>
+                <span class="post-author">작성자: <%= post.createdBy %></span>
             </div>
             <div class="post-content">
                 <%= post.content %>

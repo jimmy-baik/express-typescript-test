@@ -50,5 +50,8 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution" : "nodenext",
+  },
+  "ts-node": {
+    "esm": true
   }
 }

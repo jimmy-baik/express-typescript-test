@@ -3,7 +3,7 @@ import { xss } from 'express-xss-sanitizer';
 import path from 'node:path'
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import { FilesystemPostRepository } from '@repositories/postRepository.js';
+import { FilesystemPostRepository } from './repositories/postRepository.js';
 
 const app = express();
 const port = 3002;
@@ -33,14 +33,14 @@ app.get('/params-example/:userSuppliedParameter', (req,res) => {
 });
 
 // 게시글 Repository 설정
-const postsDirectory = './data/posts';
+const postsDirectory = './src/data/posts';
 const postsRepository = new FilesystemPostRepository(postsDirectory);
 
 // 게시글 CRUD
 app.get('/posts', async (req, res) => {
 
     const posts = await postsRepository.getAllPosts();
-    res.render('posts', {title: 'Posts', posts: posts});
+    res.render('posts', {title: '게시글 목록', posts: posts});
 });
 
 app.post('/posts', async (req, res) => {
@@ -73,6 +73,11 @@ app.delete('/posts/:postId', async (req, res) => {
         console.log('post 삭제 실패: ', errorMessage);
         res.sendStatus(404);
     }
+});
+
+app.get('/posts/new', async (req, res) => {
+
+    res.render('new-post', {title: '새 게시글'});
 });
 
 

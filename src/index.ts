@@ -16,6 +16,12 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // 미들웨어 설정
+
+// 요청 body 해석
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// XSS 방지
 app.use(xss());
 
 
@@ -37,22 +43,43 @@ const postsDirectory = './src/data/posts';
 const postsRepository = new FilesystemPostRepository(postsDirectory);
 
 // 게시글 CRUD
-app.get('/posts', async (req, res) => {
-
-    const posts = await postsRepository.getAllPosts();
-    res.render('posts', {title: '게시글 목록', posts: posts});
+app.get('/posts', async (req, res, next) => {
+    try {
+        const posts = await postsRepository.getAllPosts();
+        res.render('posts', {title: '게시글 목록', posts: posts});
+    } catch (err) {
+        next(err);
+    }
 });
 
-app.post('/posts', async (req, res) => {
-    const postId = String(randomUUID());
-    const post = {
-        id: postId,
-        title: String(req.body.title),
-        timestamp: new Date,
-        content : String(req.body.content)
+app.post('/posts', async (req, res, next) => {
+    try {
+        // 요청 데이터 검증
+        if (!req.body || !req.body.title || !req.body.content) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: '제목과 내용을 모두 입력해주세요.'
+            });
+        }
+
+        const postId = String(randomUUID());
+        const post = {
+            id: postId,
+            title: String(req.body.title),
+            timestamp: new Date(),
+            content: String(req.body.content)
+        };
+        
+        await postsRepository.createPost(post);
+        res.redirect('/posts');
+    } catch (err) {
+        // 에러를 다음 미들웨어로 전달
+        next(err);
     }
-    await postsRepository.createPost(post);
-    res.redirect(`/posts/${postId}`);
+});
+
+app.get('/posts/:postId', (req,res) => {
+    throw new Error('아직 구현되지 않았습니다.');
 });
 
 app.patch('/posts/:postId', (req,res) => {
@@ -75,10 +102,40 @@ app.delete('/posts/:postId', async (req, res) => {
     }
 });
 
-app.get('/posts/new', async (req, res) => {
-
-    res.render('new-post', {title: '새 게시글'});
+app.get('/posts/new', async (req, res, next) => {
+    try {
+        res.render('new-post', {title: '새 게시글'});
+    } catch (err) {
+        next(err);
+    }
 });
 
+
+// 에러 핸들링
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // 서버 콘솔에는 상세한 오류 정보 로그
+    console.error('서버 에러 발생:', {
+        message: err.message,
+        stack: err.stack,
+        url: req.url,
+        method: req.method,
+        timestamp: new Date().toISOString()
+    });
+
+    // 클라이언트에는 일반적인 에러 메시지만 전송
+    res.status(500).json({
+        error: '서버 내부 오류가 발생했습니다.',
+        message: '잠시 후 다시 시도해주세요.'
+    });
+});
+
+// 아무 경로에도 걸리지 않았으면 404 에러를 반환한다.
+app.use((req: express.Request, res: express.Response) => {
+    console.log('404 에러:', req.url);
+    res.status(404).json({
+        error: '요청하신 페이지를 찾을 수 없습니다.',
+        message: 'URL을 확인해주세요.'
+    });
+});
 
 app.listen(port);

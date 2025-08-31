@@ -1,3 +1,5 @@
+src/data/posts/*
+
 # custom ignores
 dist
 package-lock.json

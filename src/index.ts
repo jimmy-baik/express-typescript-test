@@ -46,6 +46,7 @@ const postsRepository = new FilesystemPostRepository(postsDirectory);
 app.get('/posts', async (req, res, next) => {
     try {
         const posts = await postsRepository.getAllPosts();
+        console.log(posts);
         res.render('posts', {title: '게시글 목록', posts: posts});
     } catch (err) {
         next(err);

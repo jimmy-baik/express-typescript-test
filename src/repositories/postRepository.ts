@@ -15,13 +15,16 @@ export class FilesystemPostRepository {
 
     async getAllPosts(): Promise<Array<Post>|null> {
         // directory 내의 파일을 모두 불러온다
+        console.log(this.dataDirectoryPath);
         const allFiles = await readdir(this.dataDirectoryPath);
+        console.log(allFiles);
         if (allFiles.length < 1) {
             return null;
         }
 
         // json 파일만 남긴다
-        const jsonFiles = allFiles.filter(file => {file.toLowerCase().endsWith('.json')});
+        const jsonFiles = allFiles.filter(file => file.toLowerCase().endsWith('.json'));
+        console.log(jsonFiles);
         if (jsonFiles.length < 1) {
             return null;
         }

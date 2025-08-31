@@ -79,8 +79,25 @@ app.post('/posts', async (req, res, next) => {
     }
 });
 
-app.get('/posts/:postId', (req,res) => {
-    throw new Error('아직 구현되지 않았습니다.');
+app.get('/posts/new', async (req, res, next) => {
+    try {
+        res.render('new-post', {title: '새 게시글'});
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/posts/:postId', async (req,res) => {
+    try {
+        const postId = String(req.params.postId);
+        const post = await postsRepository.getPost(postId);
+        if (!post) {
+            throw new Error('게시글을 찾을 수 없습니다.');
+        }
+        res.render('single-post', {title: '게시글', post: post});
+    } catch (err) {
+        res.sendStatus(404);
+    }
 });
 
 app.patch('/posts/:postId', (req,res) => {
@@ -90,7 +107,7 @@ app.patch('/posts/:postId', (req,res) => {
 app.delete('/posts/:postId', async (req, res) => {
     try {
         await postsRepository.deletePost(String(req.params.postId));
-        res.sendStatus(200);
+        res.redirect(303, '/posts');
     } catch (err) {
         let errorMessage;
         if (err instanceof Error) {
@@ -100,14 +117,6 @@ app.delete('/posts/:postId', async (req, res) => {
         }
         console.log('post 삭제 실패: ', errorMessage);
         res.sendStatus(404);
-    }
-});
-
-app.get('/posts/new', async (req, res, next) => {
-    try {
-        res.render('new-post', {title: '새 게시글'});
-    } catch (err) {
-        next(err);
     }
 });
 
@@ -132,7 +141,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
 // 아무 경로에도 걸리지 않았으면 404 에러를 반환한다.
 app.use((req: express.Request, res: express.Response) => {
-    console.log('404 에러:', req.url);
+    console.log('404 에러:', req.url, req.method);
     res.status(404).json({
         error: '요청하신 페이지를 찾을 수 없습니다.',
         message: 'URL을 확인해주세요.'

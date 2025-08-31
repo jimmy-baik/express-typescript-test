@@ -223,6 +223,16 @@ app.delete('/posts/:postId',
     requireLogin,
     async (req, res) => {
     try {
+        if (!req.user || !('username' in req.user) || req.user.username === undefined || req.user.username === null) {
+            throw new Error('로그인이 필요합니다.');
+        }
+        const post = await postsRepository.getPost(String(req.params.postId));
+        if (!post) {
+            throw new Error('게시글을 찾을 수 없습니다.');
+        }
+        if (post.createdBy !== req.user.username) {
+            throw new Error('자신의 게시글만 삭제할 수 있습니다.');
+        }
         await postsRepository.deletePost(String(req.params.postId));
         res.redirect(303, '/posts');
     } catch (err) {

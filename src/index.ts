@@ -166,12 +166,20 @@ app.post('/posts',
             });
         }
 
+        if (!req.user || !('username' in req.user) || req.user.username === undefined || req.user.username === null) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: '로그인이 필요합니다.'
+            });
+        }
+
         const postId = String(randomUUID());
         const post = {
             id: postId,
             title: String(req.body.title),
             timestamp: new Date(),
-            content: String(req.body.content)
+            content: String(req.body.content),
+            createdBy: String(req.user.username)
         };
         
         await postsRepository.createPost(post);

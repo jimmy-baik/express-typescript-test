@@ -1,7 +1,7 @@
 import { readFile, readdir, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import bcrypt from 'bcrypt';
-import type { User } from '../models/users.js';
+import type { User } from '../models/users';
 
 
 function isAsciiCharactersOnly(str: string): boolean {

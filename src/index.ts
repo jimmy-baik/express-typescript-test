@@ -8,9 +8,10 @@ import helmet from 'helmet';
 import path from 'node:path'
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import type { User } from './models/users.js';
-import { FilesystemPostRepository } from './repositories/postRepository.js';
-import { FilesystemUserRepository } from './repositories/userRepository.js';
+import type { User } from './models/users';
+import { FilesystemPostRepository } from './repositories/postRepository';
+import { FilesystemUserRepository } from './repositories/userRepository';
+import { requireLogin } from './middlewares/requireLogin';
 
 // 환경변수 불러오기
 dotenv.config();
@@ -18,8 +19,6 @@ dotenv.config();
 const app = express();
 const port = 3002;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // 템플릿 엔진 설정
 app.set('view engine', 'ejs');
@@ -99,14 +98,6 @@ app.get('/', (req, res) => {
     res.send("Hello!");
 });
 
-// 파라미터 예제
-app.get('/params-example/:userSuppliedParameter', (req,res) => {
-    let paramsString = '';
-    for (let [k, v] of Object.entries(req.params)) {
-        paramsString += String(k) + ':' + String(v);
-    }
-    res.render('index', {title: 'Params Example', body: paramsString});
-});
 
 // 로그인
 app.get('/login', (req, res) => {
@@ -115,13 +106,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', passport.authenticate('local', {successRedirect: '/posts', failureRedirect: '/login'}));
 
-// 로그인 강제 미들웨어
-function requireLogin(req: express.Request, res: express.Response, next: express.NextFunction) {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/login');
-}
+
 
 // user 생성
 app.post('/users', async (req, res, next) => {
@@ -275,4 +260,8 @@ app.use((req: express.Request, res: express.Response) => {
     });
 });
 
-app.listen(port);
+if (process.env.NODE_ENV !== 'test') {
+	app.listen(3002);
+}
+
+export default app;

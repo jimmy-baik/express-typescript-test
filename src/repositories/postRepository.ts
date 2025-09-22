@@ -1,7 +1,7 @@
 import { readFile, readdir, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto'
-import type { Post } from '../models/posts.js';
+import type { Post } from '../models/posts';
 
 
 

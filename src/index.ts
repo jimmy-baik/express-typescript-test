@@ -12,6 +12,7 @@ import type { User } from './models/users';
 import { FilesystemPostRepository } from './repositories/postRepository';
 import { FilesystemUserRepository } from './repositories/userRepository';
 import { requireLogin } from './middlewares/requireLogin';
+import { extractArticleContentFromUrl } from './services/contentExtractionService';
 
 // 환경변수 불러오기
 dotenv.config();
@@ -169,6 +170,43 @@ app.post('/posts',
         
         await postsRepository.createPost(post);
         res.redirect('/posts');
+    } catch (err) {
+        // 에러를 다음 미들웨어로 전달
+        next(err);
+    }
+});
+
+app.post('/posts/from-url',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        // 요청 데이터 검증
+        if (!req.body || !req.body.url) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: 'URL을 입력해주세요.'
+            });
+        }
+
+        if (!req.user || !('username' in req.user) || req.user.username === undefined || req.user.username === null) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: '로그인이 필요합니다.'
+            });
+        }
+
+        const createdByUsername = String(req.user.username);
+
+        // 작업 예약
+        extractArticleContentFromUrl(req.body.url, createdByUsername).then((post) => {
+            postsRepository.createPost(post);
+        }).catch((err) => {
+            console.log(err);
+        });
+
+        // 작업 완료 후 바로 종료
+        res.sendStatus(201);
+
     } catch (err) {
         // 에러를 다음 미들웨어로 전달
         next(err);

@@ -126,8 +126,9 @@
                 </time>
                 <span class="post-author">작성자: <%= post.createdBy %></span>
             </div>
+
             <% if (post.summary) { %>
-                <div class="post-summary">
+                <div class="post-meta">
                     <h3>세 줄 요약</h3>
                     <p><%= post.summary %></p>
                 </div>

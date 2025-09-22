@@ -40,7 +40,8 @@ export class FilesystemPostRepository {
                     timestamp: new Date(jsonData.timestamp),
                     title: jsonData.title,
                     content: jsonData.content,
-                    createdBy: jsonData.createdBy
+                    createdBy: jsonData.createdBy,
+                    summary: jsonData.summary
                 }
             })
         );
@@ -61,7 +62,8 @@ export class FilesystemPostRepository {
                 timestamp: new Date(jsonData.timestamp),
                 title: jsonData.title,
                 content: jsonData.content,
-                createdBy: jsonData.createdBy
+                createdBy: jsonData.createdBy,
+                summary: jsonData.summary
             }
         } catch (err) {
             console.log(err);

@@ -110,7 +110,6 @@
 </head>
 <body>
     <div class="container">
-        <h1>게시글</h1>
         
         <article class="post-container">
             <h2 class="post-title"><%= post.title %></h2>
@@ -124,7 +123,7 @@
                         minute: '2-digit'
                     }) %>
                 </time>
-                <span class="post-author">작성자: <%= post.createdBy %></span>
+                <span class="post-author"><%= post.createdBy %></span>
             </div>
 
             <% if (post.summary) { %>
@@ -140,7 +139,6 @@
         
         <div class="actions">
             <a href="/posts" class="btn btn-secondary">목록으로 돌아가기</a>
-            <a href="/posts/new" class="btn btn-primary">새 글 작성하기</a>
             <a onclick="deletePost('<%= post.id %>')" class="btn btn-danger">삭제하기</a>
         </div>
         

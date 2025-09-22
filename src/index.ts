@@ -205,7 +205,7 @@ app.post('/posts/from-url',
         });
 
         // 작업 완료 후 바로 종료
-        res.sendStatus(201);
+        res.redirect('/posts');
 
     } catch (err) {
         // 에러를 다음 미들웨어로 전달

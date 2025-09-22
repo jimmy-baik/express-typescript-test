@@ -12,7 +12,8 @@ import type { User } from './models/users';
 import { FilesystemPostRepository } from './repositories/postRepository';
 import { FilesystemUserRepository } from './repositories/userRepository';
 import { requireLogin } from './middlewares/requireLogin';
-import { extractArticleContentFromUrl } from './services/contentExtractionService';
+import { extractArticleContentFromUrl, summarizeArticleContent } from './services/contentExtractionService';
+
 
 // 환경변수 불러오기
 dotenv.config();
@@ -165,7 +166,8 @@ app.post('/posts',
             title: String(req.body.title),
             timestamp: new Date(),
             content: String(req.body.content),
-            createdBy: String(req.user.username)
+            createdBy: String(req.user.username),
+            summary: null
         };
         
         await postsRepository.createPost(post);
@@ -197,9 +199,17 @@ app.post('/posts/from-url',
 
         const createdByUsername = String(req.user.username);
 
-        // 작업 예약
-        extractArticleContentFromUrl(req.body.url, createdByUsername).then((post) => {
-            postsRepository.createPost(post);
+        // 컨텐츠 추출작업 예약
+        extractArticleContentFromUrl(req.body.url, createdByUsername).then(async (post) => {
+            // 요약을 추가로 생성한다
+            const summary = await summarizeArticleContent(post.content).catch((err) => {
+                console.log(err);
+                return null;
+            });
+
+            // 요약을 포함하여 게시글을 저장한다
+            post.summary = summary;
+            await postsRepository.createPost(post);
         }).catch((err) => {
             console.log(err);
         });

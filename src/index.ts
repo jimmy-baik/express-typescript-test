@@ -223,6 +223,17 @@ app.get('/posts/new',
     }
 });
 
+app.get('/posts/new-url',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        res.render('new-url', {title: '새 스크랩'});
+    } catch (err) {
+        next(err);
+    }
+});
+
+
 app.get('/posts/:postId',
     requireLogin,
     async (req,res) => {

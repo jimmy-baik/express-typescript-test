@@ -4,4 +4,5 @@ export interface Post {
     title: string
     content: string
     createdBy: string
+    summary: string | null
 }

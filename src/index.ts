@@ -12,7 +12,7 @@ import type { User } from './models/users';
 import { FilesystemPostRepository } from './repositories/postRepository';
 import { FilesystemUserRepository } from './repositories/userRepository';
 import { requireLogin } from './middlewares/requireLogin';
-import { extractArticleContentFromUrl, summarizeArticleContent } from './services/contentExtractionService';
+import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from './services/contentExtractionService';
 
 
 // 환경변수 불러오기
@@ -200,20 +200,31 @@ app.post('/posts/from-url',
 
         // 컨텐츠 추출작업 예약
         extractArticleContentFromUrl(req.body.url, createdByUsername).then(async (post) => {
-            // 요약을 추가로 생성한다
-            const summary = await summarizeArticleContent(post.content).catch((err) => {
-                console.log(err);
-                return null;
-            });
+            // 요약과 임베딩을 병렬로 생성한다
+            const [summary, embedding] = await Promise.all([
+                summarizeArticleContent(post.content).catch((err) => {
+                    console.log(err);
+                    return null;
+                }),
+                createEmbedding(post.content).catch((err) => {
+                    console.log(err);
+                    return null;
+                })
+            ]);
+
+            if (summary === null || embedding === null) {
+                throw new Error('요약과 임베딩 생성에 실패했습니다.');
+            }
 
             // 요약을 포함하여 게시글을 저장한다
             post.summary = summary;
+            post.embedding = embedding;
             await postsRepository.createPost(post);
         }).catch((err) => {
             console.log(err);
         });
 
-        // 작업 완료 후 바로 종료
+        // 작업 예약 후 바로 종료
         res.redirect('/posts');
 
     } catch (err) {

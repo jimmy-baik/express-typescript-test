@@ -5,4 +5,5 @@ export interface Post {
     content: string
     createdBy: string
     summary: string | null
+    embedding: number[] | null
 }

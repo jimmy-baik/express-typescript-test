@@ -24,9 +24,22 @@ export async function getEmbedding(text: string): Promise<number[]> {
         },
       body: JSON.stringify({
         model: "embeddinggemma",
-        prompt: text,
+        input: text,
       }),
     });
-    const data = await response.json() as { embedding: number[] };
-    return data.embedding; // embedding is an array of floats
+    const data = await response.json() as { embeddings: [number[]] };
+    /*
+ollama의 응답 형식은 다음과 같다.
+{
+  "model": "all-minilm",
+  "embeddings": [
+    [
+      0.010071029, -0.0017594862, 0.05007221, 0.04692972, 0.054916814,
+      0.008599704, 0.105441414, -0.025878139, 0.12958129, 0.031952348
+    ]
+  ],
+...
+}
+    */
+    return data.embeddings[0]; // 첫 번째 배열을 반환한다
 }

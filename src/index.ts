@@ -166,7 +166,8 @@ app.post('/posts',
             timestamp: new Date(),
             content: String(req.body.content),
             createdBy: String(req.user.username),
-            summary: null
+            summary: null,
+            embedding: null
         };
         
         await postsRepository.createPost(post);

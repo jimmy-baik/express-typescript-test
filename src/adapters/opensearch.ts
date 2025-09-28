@@ -51,7 +51,7 @@ export async function initializeOpenSearch() {
             method: {
               name: "hnsw",
               space_type: "cosinesimil",
-              engine: "nmslib",
+              engine: "lucene",
             },
           },
         }

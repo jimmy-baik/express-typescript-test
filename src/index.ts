@@ -13,6 +13,7 @@ import { FilesystemPostRepository } from './repositories/postRepository';
 import { FilesystemUserRepository } from './repositories/userRepository';
 import { requireLogin } from './middlewares/requireLogin';
 import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from './services/contentExtractionService';
+import { initializeOpenSearch } from './adapters/opensearch';
 
 
 // 환경변수 불러오기
@@ -41,6 +42,10 @@ app.use(session({
     saveUninitialized: false
 }));
 
+// OpenSearch 초기화
+initializeOpenSearch().catch((err) => {
+    console.error('OpenSearch 초기화 실패:', err);
+});
 
 // 게시글 Repository 설정
 const postsDirectory = './src/data/posts';

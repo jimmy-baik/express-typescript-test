@@ -42,7 +42,8 @@ export class FilesystemPostRepository {
                     content: jsonData.content,
                     createdBy: jsonData.createdBy,
                     summary: jsonData.summary,
-                    embedding: jsonData.embedding
+                    embedding: jsonData.embedding,
+                    sourceUrl: jsonData.sourceUrl
                 }
             })
         );
@@ -65,7 +66,8 @@ export class FilesystemPostRepository {
                 content: jsonData.content,
                 createdBy: jsonData.createdBy,
                 summary: jsonData.summary,
-                embedding: jsonData.embedding
+                embedding: jsonData.embedding,
+                sourceUrl: jsonData.sourceUrl
             }
         } catch (err) {
             console.log(err);

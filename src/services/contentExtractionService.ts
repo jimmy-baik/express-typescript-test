@@ -18,7 +18,8 @@ export async function extractArticleContentFromUrl(url: string, createdByUsernam
         content: article.content || '',
         createdBy: createdByUsername,
         summary: null,
-        embedding: null
+        embedding: null,
+        sourceUrl: url
     };
 }
 

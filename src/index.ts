@@ -181,7 +181,8 @@ app.post('/posts',
             content: String(req.body.content),
             createdBy: String(req.user.username),
             summary: null,
-            embedding: null
+            embedding: null,
+            sourceUrl: null
         };
         
         await postsRepository.createPost(post);
@@ -212,9 +213,10 @@ app.post('/posts/from-url',
         }
 
         const createdByUsername = String(req.user.username);
+        const sourceUrl = String(req.body.url);
 
         // 컨텐츠 추출작업 예약
-        extractArticleContentFromUrl(req.body.url, createdByUsername).then(async (post) => {
+        extractArticleContentFromUrl(sourceUrl, createdByUsername).then(async (post) => {
             // 요약과 임베딩을 병렬로 생성한다
             const [summary, embedding] = await Promise.all([
                 summarizeArticleContent(post.content).catch((err) => {
@@ -234,6 +236,7 @@ app.post('/posts/from-url',
             // 요약을 포함하여 게시글을 저장한다
             post.summary = summary;
             post.embedding = embedding;
+            post.sourceUrl = sourceUrl;
             await postsRepository.createPost(post);
         }).catch((err) => {
             console.log(err);

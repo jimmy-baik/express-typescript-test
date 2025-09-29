@@ -48,7 +48,8 @@ export async function searchPosts(userQuery: string, queryEmbedding: number[]) {
         content: h._source.content,
         createdBy: h._source.createdBy,
         timestamp: h._source.timestamp,
-        embedding: null
+        embedding: null,
+        sourceUrl: h._source.sourceUrl
     }));
 
     return searchResults;

@@ -124,6 +124,9 @@
                     }) %>
                 </time>
                 <span class="post-author"><%= post.createdBy %></span>
+                <% if (post.sourceUrl) { %>
+                    <a href="<%= post.sourceUrl %>" target="_blank">원본 링크</a>
+                <% } %>
             </div>
 
             <% if (post.summary) { %>

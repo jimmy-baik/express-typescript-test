@@ -4,6 +4,7 @@ export interface Post {
     title: string
     content: string
     createdBy: string
+    sourceUrl: string | null
     summary: string | null
     embedding: number[] | null
 }

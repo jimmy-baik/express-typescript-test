@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const OPENSEARCH_INDEX_NAME = "posts";
-
+const EMBEDDING_DIMENSION = 768;
 export const opensearchClient = new Client({
   node: "http://localhost:9200",
   auth: {
@@ -38,6 +38,9 @@ export async function initializeOpenSearch() {
             type: "text",
             analyzer: "standard"
           },
+          sourceUrl: {
+            type: "keyword"
+          },
           createdBy: {
             type: "keyword"
           },
@@ -47,7 +50,7 @@ export async function initializeOpenSearch() {
           },
           embedding: {
             type: "knn_vector",
-            dimension: 768,
+            dimension: EMBEDDING_DIMENSION,
             method: {
               name: "hnsw",
               space_type: "cosinesimil",

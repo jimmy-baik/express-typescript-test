@@ -47,7 +47,7 @@
         }
         
         .post-author {
-            margin-left: 15px;
+            margin-left: 10px;
             color: #495057;
             font-weight: 500;
         }
@@ -125,9 +125,10 @@
                 </time>
                 <span class="post-author"><%= post.createdBy %></span>
                 <% if (post.sourceUrl) { %>
-                    <a href="<%= post.sourceUrl %>" target="_blank">원본 링크</a>
+                    <a href="<%= post.sourceUrl %>" class="post-author" target="_blank">원본 보기</a>
                 <% } %>
             </div>
+
 
             <% if (post.summary) { %>
                 <div class="post-meta">

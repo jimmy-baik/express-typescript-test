@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const OPENSEARCH_INDEX_NAME = "posts";
+export const OPENSEARCH_INDEX_NAME = "posts";
 
 export const opensearchClient = new Client({
   node: "http://localhost:9200",

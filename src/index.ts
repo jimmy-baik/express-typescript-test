@@ -13,7 +13,7 @@ import { FilesystemPostRepository } from './repositories/postRepository';
 import { FilesystemUserRepository } from './repositories/userRepository';
 import { requireLogin } from './middlewares/requireLogin';
 import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from './services/contentExtractionService';
-import { initializeOpenSearch } from './adapters/opensearch';
+import { initializeOpenSearch, opensearchClient, OPENSEARCH_INDEX_NAME } from './adapters/opensearch';
 
 
 // 환경변수 불러오기
@@ -307,6 +307,71 @@ app.delete('/posts/:postId',
     }
 });
 
+// 검색
+app.get('/search',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        const userQuery = String(req.query.q || '').trim();
+        if (!userQuery) {
+            return res.status(400).json({ error: '잘못된 요청입니다.', message: '검색어 파라미터가 필요합니다.' });
+        }
+
+        // 사용자 query의 embedding을 생성한다.
+        const queryEmbedding = await createEmbedding(userQuery);
+
+        // BM25 + kNN vector 하이브리드 검색
+        const opensearchResponse = await opensearchClient.search({
+            index: OPENSEARCH_INDEX_NAME,
+            body: {
+                size: 20,
+                query: {
+                    hybrid: {
+                        queries: [
+                            {
+                                multi_match: {
+                                    query: userQuery,
+                                    fields: [
+                                        'title^3', // title 에 제일 높은 가중치를 준다.
+                                        'summary^2', // summary 에 두 번째로 높은 가중치를 준다.
+                                        'content',
+                                        'createdBy'
+                                    ],
+                                    operator: 'and'
+                                }
+                            },
+                            {
+                                knn: {
+                                    embedding: {
+                                        vector: queryEmbedding,
+                                        k: 50
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                _source: ['id', 'timestamp', 'title', 'summary', 'content', 'createdBy']
+            }
+        });
+
+        const searchResults = (opensearchResponse.body.hits?.hits || []).map((h: any) => ({
+            id: h._source.id,
+            title: h._source.title,
+            summary: h._source.summary,
+            content: h._source.content,
+            createdBy: h._source.createdBy,
+            timestamp: h._source.timestamp,
+            score: h._score
+        }));
+
+        searchResults.sort((a, b) => b.score - a.score);
+
+        return res.json({ count: searchResults.length, results: searchResults });
+    } catch (err) {
+        next(err);
+    }
+});
 
 // 에러 핸들링
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

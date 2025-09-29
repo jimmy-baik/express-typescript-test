@@ -5,16 +5,15 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
-import path from 'node:path'
-import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import type { User } from './models/users';
 import { FilesystemPostRepository } from './repositories/postRepository';
 import { FilesystemUserRepository } from './repositories/userRepository';
 import { requireLogin } from './middlewares/requireLogin';
 import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from './services/contentExtractionService';
-import { initializeOpenSearch, opensearchClient, OPENSEARCH_INDEX_NAME } from './adapters/opensearch';
-
+import { initializeOpenSearch } from './adapters/opensearch';
+import { searchPosts } from './services/searchService';
+import { Post } from '@models/posts';
 
 // 환경변수 불러오기
 dotenv.config();
@@ -137,8 +136,18 @@ app.get('/posts',
     requireLogin,
     async (req, res, next) => {
         try {
-            const posts = await postsRepository.getAllPosts();
-            res.render('posts', {title: '게시글 목록', posts: posts});
+          const userQuery = String(req.query.q || '').trim();
+          let posts: Post[] = [];
+
+          if (userQuery) {
+            // 검색어가 있으면 검색어를 이용해서 검색한다
+            const queryEmbedding = await createEmbedding(userQuery);
+            posts = await searchPosts(userQuery, queryEmbedding) || [];
+          } else {
+            // 검색어가 없으면 모든 게시글을 조회한다
+            posts = await postsRepository.getAllPosts() || [];
+          }
+          res.render('posts', {title: '게시글 목록', posts: posts});
         } catch (err) {
             next(err);
         }
@@ -316,58 +325,9 @@ app.get('/search',
         if (!userQuery) {
             return res.status(400).json({ error: '잘못된 요청입니다.', message: '검색어 파라미터가 필요합니다.' });
         }
-
-        // 사용자 query의 embedding을 생성한다.
         const queryEmbedding = await createEmbedding(userQuery);
-
-        // BM25 + kNN vector 하이브리드 검색
-        const opensearchResponse = await opensearchClient.search({
-            index: OPENSEARCH_INDEX_NAME,
-            body: {
-                size: 20,
-                query: {
-                    hybrid: {
-                        queries: [
-                            {
-                                multi_match: {
-                                    query: userQuery,
-                                    fields: [
-                                        'title^3', // title 에 제일 높은 가중치를 준다.
-                                        'summary^2', // summary 에 두 번째로 높은 가중치를 준다.
-                                        'content',
-                                        'createdBy'
-                                    ],
-                                    operator: 'and'
-                                }
-                            },
-                            {
-                                knn: {
-                                    embedding: {
-                                        vector: queryEmbedding,
-                                        k: 50
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                },
-                _source: ['id', 'timestamp', 'title', 'summary', 'content', 'createdBy']
-            }
-        });
-
-        const searchResults = (opensearchResponse.body.hits?.hits || []).map((h: any) => ({
-            id: h._source.id,
-            title: h._source.title,
-            summary: h._source.summary,
-            content: h._source.content,
-            createdBy: h._source.createdBy,
-            timestamp: h._source.timestamp,
-            score: h._score
-        }));
-
-        searchResults.sort((a, b) => b.score - a.score);
-
-        return res.json({ count: searchResults.length, results: searchResults });
+        const searchResults = await searchPosts(userQuery, queryEmbedding);
+        res.json({count: searchResults.length, results: searchResults});
     } catch (err) {
         next(err);
     }

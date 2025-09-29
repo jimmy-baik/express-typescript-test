@@ -47,7 +47,7 @@ export async function initializeOpenSearch() {
           },
           embedding: {
             type: "knn_vector",
-            dimension: 1024,
+            dimension: 768,
             method: {
               name: "hnsw",
               space_type: "cosinesimil",

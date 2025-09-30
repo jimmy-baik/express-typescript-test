@@ -5,15 +5,15 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
-import path from 'node:path'
-import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import type { User } from './models/users';
 import { FilesystemPostRepository } from './repositories/postRepository';
 import { FilesystemUserRepository } from './repositories/userRepository';
 import { requireLogin } from './middlewares/requireLogin';
-import { extractArticleContentFromUrl, summarizeArticleContent } from './services/contentExtractionService';
-
+import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from './services/contentExtractionService';
+import { initializeOpenSearch } from './adapters/opensearch';
+import { searchPosts } from './services/searchService';
+import { Post } from '@models/posts';
 
 // 환경변수 불러오기
 dotenv.config();
@@ -41,6 +41,10 @@ app.use(session({
     saveUninitialized: false
 }));
 
+// OpenSearch 초기화
+initializeOpenSearch().catch((err) => {
+    console.error('OpenSearch 초기화 실패:', err);
+});
 
 // 게시글 Repository 설정
 const postsDirectory = './src/data/posts';
@@ -132,8 +136,18 @@ app.get('/posts',
     requireLogin,
     async (req, res, next) => {
         try {
-            const posts = await postsRepository.getAllPosts();
-            res.render('posts', {title: '게시글 목록', posts: posts});
+          const userQuery = String(req.query.q || '').trim();
+          let posts: Post[] = [];
+
+          if (userQuery) {
+            // 검색어가 있으면 검색어를 이용해서 검색한다
+            const queryEmbedding = await createEmbedding(userQuery);
+            posts = await searchPosts(userQuery, queryEmbedding) || [];
+          } else {
+            // 검색어가 없으면 모든 게시글을 조회한다
+            posts = await postsRepository.getAllPosts() || [];
+          }
+          res.render('posts', {title: '게시글 목록', posts: posts});
         } catch (err) {
             next(err);
         }
@@ -166,7 +180,9 @@ app.post('/posts',
             timestamp: new Date(),
             content: String(req.body.content),
             createdBy: String(req.user.username),
-            summary: null
+            summary: null,
+            embedding: null,
+            sourceUrl: null
         };
         
         await postsRepository.createPost(post);
@@ -197,23 +213,36 @@ app.post('/posts/from-url',
         }
 
         const createdByUsername = String(req.user.username);
+        const sourceUrl = String(req.body.url);
 
         // 컨텐츠 추출작업 예약
-        extractArticleContentFromUrl(req.body.url, createdByUsername).then(async (post) => {
-            // 요약을 추가로 생성한다
-            const summary = await summarizeArticleContent(post.content).catch((err) => {
-                console.log(err);
-                return null;
-            });
+        extractArticleContentFromUrl(sourceUrl, createdByUsername).then(async (post) => {
+            // 요약과 임베딩을 병렬로 생성한다
+            const [summary, embedding] = await Promise.all([
+                summarizeArticleContent(post.content).catch((err) => {
+                    console.log(err);
+                    return null;
+                }),
+                createEmbedding(post.content).catch((err) => {
+                    console.log(err);
+                    return null;
+                })
+            ]);
+
+            if (summary === null || embedding === null) {
+                throw new Error('요약과 임베딩 생성에 실패했습니다.');
+            }
 
             // 요약을 포함하여 게시글을 저장한다
             post.summary = summary;
+            post.embedding = embedding;
+            post.sourceUrl = sourceUrl;
             await postsRepository.createPost(post);
         }).catch((err) => {
             console.log(err);
         });
 
-        // 작업 완료 후 바로 종료
+        // 작업 예약 후 바로 종료
         res.redirect('/posts');
 
     } catch (err) {
@@ -290,6 +319,22 @@ app.delete('/posts/:postId',
     }
 });
 
+// 검색
+app.get('/search',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        const userQuery = String(req.query.q || '').trim();
+        if (!userQuery) {
+            return res.status(400).json({ error: '잘못된 요청입니다.', message: '검색어 파라미터가 필요합니다.' });
+        }
+        const queryEmbedding = await createEmbedding(userQuery);
+        const searchResults = await searchPosts(userQuery, queryEmbedding);
+        res.json({count: searchResults.length, results: searchResults});
+    } catch (err) {
+        next(err);
+    }
+});
 
 // 에러 핸들링
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

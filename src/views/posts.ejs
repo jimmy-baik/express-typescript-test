@@ -92,10 +92,18 @@
             border-radius: 6px;
             font-weight: 500;
             transition: background-color 0.2s ease;
+            border: none;
+            outline: none;
         }
         
         .btn:hover {
             background: #0056b3;
+        }
+        
+        .btn:focus,
+        .btn:active {
+            outline: none;
+            box-shadow: none;
         }
         
         .btn-primary {
@@ -105,11 +113,45 @@
         .btn-primary:hover {
             background: #0056b3;
         }
+
+        .search-form {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-create {
+            background: #6f42c1;
+        }
+
+        .btn-create:hover {
+            background: #59339d;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <h1>게시글 목록</h1>  
+        <form method="GET" action="" class="search-form">
+            <input type="text" name="q" class="search-input" placeholder="검색어를 입력하세요" />
+            <button type="submit" class="btn btn-primary">검색</button>
+        </form>
         <% if (posts && posts.length > 0) { %>
             <div class="posts-list">
                 <% posts.forEach(function(post) { %>
@@ -139,8 +181,8 @@
         <% } %>
         
         <div class="actions">
-            <a href="/posts/new" class="btn btn-primary">새 글 작성하기</a>
-            <a href="/posts/new-url" class="btn btn-primary">새 링크 등록하기</a>
+            <a href="/posts/new" class="btn btn-icon btn-create"><span aria-hidden="true">+</span><span>직접 글 작성하기</span></a>
+            <a href="/posts/new-url" class="btn btn-icon btn-create"><span aria-hidden="true">🔗</span><span>링크 스크랩하기</span></a>
         </div>
     </div>
 

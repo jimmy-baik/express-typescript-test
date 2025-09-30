@@ -2,11 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { extract, ArticleData } from '@extractus/article-extractor';
 import { Post } from '../models/posts';
 import { FilesystemPostRepository } from '../repositories/postRepository';
-import { GoogleGenAI } from "@google/genai";
-import dotenv from 'dotenv';
+import { llmClient, getEmbedding } from '../adapters/llm';
 
-// 환경변수 불러오기
-dotenv.config();
 
 export async function extractArticleContentFromUrl(url: string, createdByUsername: string): Promise<Post> {
     const article = await extract(url);
@@ -20,16 +17,12 @@ export async function extractArticleContentFromUrl(url: string, createdByUsernam
         timestamp: new Date(),
         content: article.content || '',
         createdBy: createdByUsername,
-        summary: null
+        summary: null,
+        embedding: null,
+        sourceUrl: url
     };
 }
 
-
-const APIKey = process.env.GEMINI_API_KEY || null;
-if (!APIKey) {
-    throw new Error('LLM API KEY가 설정되지 않았습니다. 환경변수에서 API Key를 설정해주세요.');
-}
-const llmClient = new GoogleGenAI({apiKey: APIKey});
 
 export async function summarizeArticleContent(content: string): Promise<string> {
   const response = await llmClient.models.generateContent({
@@ -40,4 +33,9 @@ export async function summarizeArticleContent(content: string): Promise<string> 
     throw new Error('요약에 실패했습니다.');
   }
   return response.text;
+}
+
+
+export async function createEmbedding(content: string): Promise<number[]> {
+  return await getEmbedding(content);
 }

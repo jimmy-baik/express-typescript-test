@@ -1,6 +1,6 @@
 export interface User {
     username: string
-    hashed_password: string
+    hashedPassword: string
     likedPosts: string[]
     viewedPosts: string[]
 }

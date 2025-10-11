@@ -71,7 +71,7 @@ passport.use(new LocalStrategy({
             return done(null, false);
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.hashed_password);
+        const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
         if (!isPasswordValid) {
             return done(null, false);
         }

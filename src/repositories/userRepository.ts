@@ -22,7 +22,9 @@ export class FilesystemUserRepository {
             const jsonData = JSON.parse(fileContent);
             return {
                 username: jsonData.username,
-                hashed_password: jsonData.hashed_password
+                hashedPassword: jsonData.hashedPassword,
+                likedPosts: jsonData.likedPosts,
+                viewedPosts: jsonData.viewedPosts
             }
         } catch (err) {
             console.log(err);
@@ -45,7 +47,9 @@ export class FilesystemUserRepository {
 
         const user = {
             username: username,
-            hashed_password: hashedPassword
+            hashedPassword: hashedPassword,
+            likedPosts: [],
+            viewedPosts: []
         }
 
         const fileName = user.username + '.json';

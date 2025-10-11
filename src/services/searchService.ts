@@ -8,7 +8,7 @@ export async function searchPosts(userQuery: string, queryEmbedding: number[]) {
     const opensearchResponse = await opensearchClient.search({
         index: OPENSEARCH_INDEX_NAME,
         body: {
-            size: 20,
+            size: 5,
             query: {
                 hybrid: {
                     queries: [
@@ -52,5 +52,10 @@ export async function searchPosts(userQuery: string, queryEmbedding: number[]) {
         sourceUrl: h._source.sourceUrl
     }));
 
-    return searchResults;
+    // 결과 반환 전 중복 제거
+    const uniqueResults = searchResults.filter((post, index, self) => 
+        index === self.findIndex(p => p.id === post.id)
+    );
+
+    return uniqueResults;
 }

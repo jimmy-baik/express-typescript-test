@@ -26,6 +26,9 @@ const port = 3002;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+//정적파일 설정
+app.use(express.static(path.join(__dirname, 'public')));
+
 // 미들웨어 설정
 
 // 요청 body 해석

@@ -169,7 +169,7 @@
                                     minute: '2-digit'
                                 }) %>
                             </time>
-                            <span class="post-author">작성자: <%= post.createdBy %></span>
+                            <span class="post-author">등록: <%= post.createdBy %></span>
                         </div>
                     </article>
                 <% }); %>
@@ -181,8 +181,8 @@
         <% } %>
         
         <div class="actions">
-            <a href="/posts/new" class="btn btn-icon btn-create"><span aria-hidden="true">+</span><span>직접 글 작성하기</span></a>
-            <a href="/posts/new-url" class="btn btn-icon btn-create"><span aria-hidden="true">🔗</span><span>링크 스크랩하기</span></a>
+            <a href="/posts/new" class="btn btn-icon btn-primary"><span aria-hidden="true">+</span><span>글 작성하기</span></a>
+            <a href="/posts/new-url" class="btn btn-icon btn-primary"><span aria-hidden="true">🔗</span><span>링크 스크랩하기</span></a>
         </div>
     </div>
 

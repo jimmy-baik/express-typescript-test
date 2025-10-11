@@ -350,6 +350,35 @@ app.post('/posts/:postId/like',
     }
 });
 
+// 열람한 게시글 목록
+app.post('/posts/:postId/viewed',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        const postId = String(req.params.postId);
+        const user = req.user;
+        if (!user || !('username' in user) || user.username === undefined || user.username === null) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: '로그인이 필요합니다.'
+            });
+        }
+        const username = String(user.username);
+        const post = await postsRepository.getPost(postId);
+        if (!post) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: '게시글을 찾을 수 없습니다.'
+            });
+        }
+        const viewedPosts = await usersRepository.viewPost(username, postId);
+        res.status(200).send();
+    }
+    catch (err) {
+        next(err);
+    }
+});
+
 // 검색
 app.get('/search',
     requireLogin,

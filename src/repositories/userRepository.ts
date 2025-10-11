@@ -54,8 +54,6 @@ export class FilesystemUserRepository {
 
         const fileName = user.username + '.json';
         const filePath = path.join(this.dataDirectoryPath, fileName);
-
-
         const jsonString = JSON.stringify(user);
         await writeFile(filePath, jsonString);
         return user.username;
@@ -72,6 +70,19 @@ export class FilesystemUserRepository {
         const jsonString = JSON.stringify(user);
         await writeFile(filePath, jsonString);
         return user.likedPosts;
+    }
+
+    async viewPost(username: string, postId: string): Promise<string[]> {
+        const user = await this.getUser(username);
+        if (!user) {
+            throw new Error('사용자를 찾을 수 없습니다.');
+        }
+        user.viewedPosts.push(postId);
+        const fileName = user.username + '.json';
+        const filePath = path.join(this.dataDirectoryPath, fileName);
+        const jsonString = JSON.stringify(user);
+        await writeFile(filePath, jsonString);
+        return user.viewedPosts;
     }
 
 }

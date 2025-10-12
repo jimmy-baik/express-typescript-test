@@ -13,7 +13,7 @@ import { requireLogin } from './middlewares/requireLogin';
 import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from './services/contentExtractionService';
 import { calculateUserEmbedding } from './services/recommendationService';
 import { initializeOpenSearch } from './adapters/opensearch';
-import { searchPosts } from './services/searchService';
+import { searchPosts, searchPostsByEmbedding } from './services/searchService';
 import { Post } from '@models/posts';
 import { User } from '@models/users';
 
@@ -145,14 +145,19 @@ app.get('/posts',
           let posts: Post[] = [];
 
           if (userQuery) {
-            // 검색어가 있으면 검색어를 이용해서 검색한다
+            // 1.검색 - 검색어가 붙어있으면 hybrid search 검색 결과를 표시해준다.
             const queryEmbedding = await createEmbedding(userQuery);
             posts = await searchPosts(userQuery, queryEmbedding) || [];
+          } else if (req.user && 'userEmbedding' in req.user && req.user.userEmbedding as number[]) {
+            // 2. 추천 - 검색어는 없는데 user embedding이 있으면 user embedding을 이용해서 추천 아티클을 검색한다.
+            posts = await searchPostsByEmbedding(req.user.userEmbedding as number[]) || [];
           } else {
-            // 검색어가 없으면 모든 게시글을 조회한다
+            // 3. cold start - 검색어도 없고 user embedding도 없으면 모든 게시글을 조회한다
             posts = await postsRepository.getAllPosts() || [];
           }
+
           res.render('posts', {title: '게시글 목록', posts: posts});
+
         } catch (err) {
             next(err);
         }

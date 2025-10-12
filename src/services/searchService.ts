@@ -2,13 +2,13 @@ import { createEmbedding } from "./contentExtractionService";
 import { opensearchClient, OPENSEARCH_INDEX_NAME } from "../adapters/opensearch";
 import { Post } from "../models/posts";
 
-export async function searchPosts(userQuery: string, queryEmbedding: number[]) {
+export async function searchPosts(userQuery: string, queryEmbedding: number[], size: number = 5) {
 
     // BM25 + kNN vector 하이브리드 검색
     const opensearchResponse = await opensearchClient.search({
         index: OPENSEARCH_INDEX_NAME,
         body: {
-            size: 5,
+            size: size,
             query: {
                 hybrid: {
                     queries: [
@@ -39,6 +39,32 @@ export async function searchPosts(userQuery: string, queryEmbedding: number[]) {
         }
     });
 
+    return filterUniqueSearchResults(opensearchResponse);
+}
+
+
+export async function searchPostsByEmbedding(embedding: number[], size: number = 5) {
+    const opensearchResponse = await opensearchClient.search({
+        index: OPENSEARCH_INDEX_NAME,
+        body: {
+            size: size,
+            query: {
+                knn: {
+                    embedding: {
+                        vector: embedding,
+                        k: 50
+                    }
+                }
+            }
+        }
+    });
+
+    return filterUniqueSearchResults(opensearchResponse);
+
+}
+
+
+function filterUniqueSearchResults(opensearchResponse: any) : Post[] {
     const searchResults: Post[] = (opensearchResponse.body.hits?.hits || [])
       .sort((a: any, b: any) => b._score - a._score)
       .map((h: any) => ({

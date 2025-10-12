@@ -11,9 +11,11 @@ import { FilesystemPostRepository } from './repositories/postRepository';
 import { FilesystemUserRepository } from './repositories/userRepository';
 import { requireLogin } from './middlewares/requireLogin';
 import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from './services/contentExtractionService';
+import { calculateUserEmbedding } from './services/recommendationService';
 import { initializeOpenSearch } from './adapters/opensearch';
 import { searchPosts } from './services/searchService';
 import { Post } from '@models/posts';
+import { User } from '@models/users';
 
 // 환경변수 불러오기
 dotenv.config();
@@ -343,7 +345,17 @@ app.post('/posts/:postId/like',
                 message: '게시글을 찾을 수 없습니다.'
             });
         }
+        // 내역을 사용자 프로필에 저장한다.
         const likedPosts = await usersRepository.likePost(username, postId);
+        (user as User).likedPosts = likedPosts;
+
+        // user embedding 계산 작업을 에약한다.
+        calculateUserEmbedding(user as User, postsRepository).then( async (userEmbedding) => {
+            if (userEmbedding) {
+                await usersRepository.updateUserEmbedding(username, userEmbedding);
+            }
+        })
+
         res.status(200).send();
     } catch (err) {
         next(err);
@@ -372,6 +384,15 @@ app.post('/posts/:postId/viewed',
             });
         }
         const viewedPosts = await usersRepository.viewPost(username, postId);
+        (user as User).viewedPosts = viewedPosts;
+
+        // user embedding 계산 작업을 에약한다.
+        calculateUserEmbedding(user as User, postsRepository).then( async (userEmbedding) => {
+            if (userEmbedding) {
+                await usersRepository.updateUserEmbedding(username, userEmbedding);
+            }
+        })
+
         res.status(200).send();
     }
     catch (err) {

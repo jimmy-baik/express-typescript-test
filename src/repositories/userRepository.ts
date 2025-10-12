@@ -87,4 +87,17 @@ export class FilesystemUserRepository {
         return user.viewedPosts;
     }
 
+    async updateUserEmbedding(username: string, embedding: number[]): Promise<number[]> {
+        const user = await this.getUser(username);
+        if (!user) {
+            throw new Error('사용자를 찾을 수 없습니다.');
+        }
+        user.userEmbedding = embedding;
+        const fileName = user.username + '.json';
+        const filePath = path.join(this.dataDirectoryPath, fileName);
+        const jsonString = JSON.stringify(user);
+        await writeFile(filePath, jsonString);
+        return user.userEmbedding;
+    }
+
 }

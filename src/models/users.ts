@@ -3,4 +3,5 @@ export interface User {
     hashedPassword: string
     likedPosts: string[]
     viewedPosts: string[]
+    userEmbedding: number[] | null
 }

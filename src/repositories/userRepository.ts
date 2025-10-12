@@ -24,7 +24,8 @@ export class FilesystemUserRepository {
                 username: jsonData.username,
                 hashedPassword: jsonData.hashedPassword,
                 likedPosts: jsonData.likedPosts,
-                viewedPosts: jsonData.viewedPosts
+                viewedPosts: jsonData.viewedPosts,
+                userEmbedding: jsonData.userEmbedding
             }
         } catch (err) {
             console.log(err);
@@ -49,7 +50,8 @@ export class FilesystemUserRepository {
             username: username,
             hashedPassword: hashedPassword,
             likedPosts: [],
-            viewedPosts: []
+            viewedPosts: [],
+            userEmbedding: null
         }
 
         const fileName = user.username + '.json';

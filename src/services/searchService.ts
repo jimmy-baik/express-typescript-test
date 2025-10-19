@@ -63,6 +63,45 @@ export async function searchPostsByEmbedding(embedding: number[], size: number =
 
 }
 
+export async function searchPostsByEmbeddingWithPagination(
+    embedding: number[], 
+    page: number = 1, 
+    limit: number = 5,
+    excludeIds: string[] = []
+) {
+    const from = (page - 1) * limit;
+    
+    const opensearchResponse = await opensearchClient.search({
+        index: OPENSEARCH_INDEX_NAME,
+        body: {
+            size: limit,
+            from: from,
+            query: {
+                bool: {
+                    must: [
+                        {
+                            knn: {
+                                embedding: {
+                                    vector: embedding,
+                                    k: 50
+                                }
+                            }
+                        }
+                    ],
+                    must_not: excludeIds.length > 0 ? [
+                        {
+                            terms: {
+                                id: excludeIds
+                            }
+                        }
+                    ] : []
+                }
+            }
+        }
+    });
+
+    return filterUniqueSearchResults(opensearchResponse);
+}
 
 function filterUniqueSearchResults(opensearchResponse: any) : Post[] {
     const searchResults: Post[] = (opensearchResponse.body.hits?.hits || [])

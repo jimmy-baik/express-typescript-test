@@ -5,6 +5,7 @@ import { FilesystemUserRepository } from '../../repositories/userRepository';
 import { requireLogin } from '../../middlewares/requireLogin';
 import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from '../../services/contentExtractionService';
 import { calculateUserEmbedding } from '../../services/recommendationService';
+import { searchPostsByEmbeddingWithPagination } from '../../services/searchService';
 import { Post } from '../../models/posts';
 import { User } from '../../models/users';
 
@@ -17,6 +18,40 @@ const postsRepository = new FilesystemPostRepository(postsDirectory);
 // 유저 Repository 설정
 const usersDirectory = './src/data/users';
 const usersRepository = new FilesystemUserRepository(usersDirectory);
+
+// 추천 게시글 피드 조회
+router.get('/recommendations',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 5;
+        const exclude = req.query.exclude ? (req.query.exclude as string).split(',') : [];
+
+        if (!req.user || !('userEmbedding' in req.user) || !req.user.userEmbedding) {
+            return res.status(400).json({
+                error: 'User embedding not found',
+                message: 'User preferences not available'
+            });
+        }
+
+        const posts = await searchPostsByEmbeddingWithPagination(
+            req.user.userEmbedding as number[],
+            page,
+            limit,
+            exclude
+        );
+
+        res.json({
+            posts: posts,
+            hasMore: posts.length === limit,
+            page: page
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+});
 
 // 게시글 생성
 router.post('/',

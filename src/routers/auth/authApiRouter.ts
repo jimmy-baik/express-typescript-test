@@ -3,11 +3,7 @@ import passport from 'passport';
 
 const router = express.Router();
 
-// 로그인
-router.get('/login', (req, res) => {
-    res.render('login', {title: 'Login'});
-});
-
+// 로그인 처리
 router.post('/login', passport.authenticate('local', {
     successRedirect: '/posts', 
     failureRedirect: '/login'

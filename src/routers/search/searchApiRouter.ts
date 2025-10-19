@@ -1,7 +1,7 @@
 import express from 'express';
-import { requireLogin } from '../middlewares/requireLogin';
-import { createEmbedding } from '../services/contentExtractionService';
-import { searchPosts } from '../services/searchService';
+import { requireLogin } from '../../middlewares/requireLogin';
+import { createEmbedding } from '../../services/contentExtractionService';
+import { searchPosts } from '../../services/searchService';
 
 const router = express.Router();
 

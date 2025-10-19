@@ -8,10 +8,16 @@ import helmet from 'helmet';
 import path from 'node:path';
 import { FilesystemUserRepository } from './repositories/userRepository';
 import { initializeOpenSearch } from './adapters/opensearch';
-import authRouter from './routers/authRouter';
-import usersRouter from './routers/usersRouter';
-import postsRouter from './routers/postsRouter';
-import searchRouter from './routers/searchRouter';
+
+// View 경로 (HTML 웹페이지를 반환)
+import authViewRouter from './routers/auth/authViewRouter';
+import postsViewRouter from './routers/posts/postsViewRouter';
+
+// API 경로 (JSON 응답을 반환)
+import authApiRouter from './routers/auth/authApiRouter';
+import usersApiRouter from './routers/users/usersApiRouter';
+import postsApiRouter from './routers/posts/postsApiRouter';
+import searchApiRouter from './routers/search/searchApiRouter';
 
 // 환경변수 불러오기
 dotenv.config();
@@ -102,11 +108,18 @@ app.get('/', (req, res) => {
     res.send("Hello!");
 });
 
-// 라우터 설정
-app.use('/', authRouter);
-app.use('/users', usersRouter);
-app.use('/posts', postsRouter);
-app.use('/search', searchRouter);
+
+// View 경로 (HTML 웹페이지를 반환)
+app.use('/', authViewRouter);
+app.use('/posts', postsViewRouter);
+
+
+// API 경로 (JSON 응답)
+app.use('/api/auth', authApiRouter);
+app.use('/api/users', usersApiRouter);
+app.use('/api/posts', postsApiRouter);
+app.use('/api/search', searchApiRouter);
+
 
 // 에러 핸들링
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

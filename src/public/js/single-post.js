@@ -27,7 +27,7 @@ function toggleLike(postId) {
     const heartIconTop = likeBtnTop.querySelector('.heart-icon');
     const heartIconBottom = likeBtnBottom.querySelector('.heart-icon');
 
-    fetch(`/posts/${postId}/like`, {
+    fetch(`/api/posts/${postId}/like`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -67,7 +67,7 @@ function sendTrackPostViewRequest(postId) {
     
     hasTrackedView = true;
     
-    fetch(`/posts/${postId}/viewed`, {
+    fetch(`/api/posts/${postId}/viewed`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

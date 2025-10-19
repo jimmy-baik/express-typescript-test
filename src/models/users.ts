@@ -1,4 +1,7 @@
 export interface User {
-    username: string;
-    hashed_password: string;
+    username: string
+    hashedPassword: string
+    likedPosts: string[]
+    viewedPosts: string[]
+    userEmbedding: number[] | null
 }

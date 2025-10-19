@@ -22,7 +22,10 @@ export class FilesystemUserRepository {
             const jsonData = JSON.parse(fileContent);
             return {
                 username: jsonData.username,
-                hashed_password: jsonData.hashed_password
+                hashedPassword: jsonData.hashedPassword,
+                likedPosts: jsonData.likedPosts,
+                viewedPosts: jsonData.viewedPosts,
+                userEmbedding: jsonData.userEmbedding
             }
         } catch (err) {
             console.log(err);
@@ -45,16 +48,56 @@ export class FilesystemUserRepository {
 
         const user = {
             username: username,
-            hashed_password: hashedPassword
+            hashedPassword: hashedPassword,
+            likedPosts: [],
+            viewedPosts: [],
+            userEmbedding: null
         }
 
         const fileName = user.username + '.json';
         const filePath = path.join(this.dataDirectoryPath, fileName);
-
-
         const jsonString = JSON.stringify(user);
         await writeFile(filePath, jsonString);
         return user.username;
+    }
+    
+    async likePost(username: string, postId: string): Promise<string[]> {
+        const user = await this.getUser(username);
+        if (!user) {
+            throw new Error('사용자를 찾을 수 없습니다.');
+        }
+        user.likedPosts.push(postId);
+        const fileName = user.username + '.json';
+        const filePath = path.join(this.dataDirectoryPath, fileName);
+        const jsonString = JSON.stringify(user);
+        await writeFile(filePath, jsonString);
+        return user.likedPosts;
+    }
+
+    async viewPost(username: string, postId: string): Promise<string[]> {
+        const user = await this.getUser(username);
+        if (!user) {
+            throw new Error('사용자를 찾을 수 없습니다.');
+        }
+        user.viewedPosts.push(postId);
+        const fileName = user.username + '.json';
+        const filePath = path.join(this.dataDirectoryPath, fileName);
+        const jsonString = JSON.stringify(user);
+        await writeFile(filePath, jsonString);
+        return user.viewedPosts;
+    }
+
+    async updateUserEmbedding(username: string, embedding: number[]): Promise<number[]> {
+        const user = await this.getUser(username);
+        if (!user) {
+            throw new Error('사용자를 찾을 수 없습니다.');
+        }
+        user.userEmbedding = embedding;
+        const fileName = user.username + '.json';
+        const filePath = path.join(this.dataDirectoryPath, fileName);
+        const jsonString = JSON.stringify(user);
+        await writeFile(filePath, jsonString);
+        return user.userEmbedding;
     }
 
 }

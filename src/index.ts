@@ -11,9 +11,11 @@ import { FilesystemPostRepository } from './repositories/postRepository';
 import { FilesystemUserRepository } from './repositories/userRepository';
 import { requireLogin } from './middlewares/requireLogin';
 import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from './services/contentExtractionService';
+import { calculateUserEmbedding } from './services/recommendationService';
 import { initializeOpenSearch } from './adapters/opensearch';
-import { searchPosts } from './services/searchService';
+import { searchPosts, searchPostsByEmbedding } from './services/searchService';
 import { Post } from '@models/posts';
+import { User } from '@models/users';
 
 // 환경변수 불러오기
 dotenv.config();
@@ -25,6 +27,9 @@ const port = 3002;
 // 템플릿 엔진 설정
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+//정적파일 설정
+app.use(express.static(path.join(__dirname, 'public')));
 
 // 미들웨어 설정
 
@@ -71,7 +76,7 @@ passport.use(new LocalStrategy({
             return done(null, false);
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.hashed_password);
+        const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
         if (!isPasswordValid) {
             return done(null, false);
         }
@@ -140,14 +145,19 @@ app.get('/posts',
           let posts: Post[] = [];
 
           if (userQuery) {
-            // 검색어가 있으면 검색어를 이용해서 검색한다
+            // 1.검색 - 검색어가 붙어있으면 hybrid search 검색 결과를 표시해준다.
             const queryEmbedding = await createEmbedding(userQuery);
             posts = await searchPosts(userQuery, queryEmbedding) || [];
+          } else if (req.user && 'userEmbedding' in req.user && req.user.userEmbedding as number[]) {
+            // 2. 추천 - 검색어는 없는데 user embedding이 있으면 user embedding을 이용해서 추천 아티클을 검색한다.
+            posts = await searchPostsByEmbedding(req.user.userEmbedding as number[]) || [];
           } else {
-            // 검색어가 없으면 모든 게시글을 조회한다
+            // 3. cold start - 검색어도 없고 user embedding도 없으면 모든 게시글을 조회한다
             posts = await postsRepository.getAllPosts() || [];
           }
+
           res.render('posts', {title: '게시글 목록', posts: posts});
+
         } catch (err) {
             next(err);
         }
@@ -316,6 +326,82 @@ app.delete('/posts/:postId',
         }
         console.log('post 삭제 실패: ', errorMessage);
         res.sendStatus(404);
+    }
+});
+
+// like 기능
+app.post('/posts/:postId/like',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        const postId = String(req.params.postId);
+        const user = req.user;
+        if (!user || !('username' in user) || user.username === undefined || user.username === null) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: '로그인이 필요합니다.'
+            });
+        }
+        const username = String(user.username);
+        const post = await postsRepository.getPost(postId);
+        if (!post) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: '게시글을 찾을 수 없습니다.'
+            });
+        }
+        // 내역을 사용자 프로필에 저장한다.
+        const likedPosts = await usersRepository.likePost(username, postId);
+        (user as User).likedPosts = likedPosts;
+
+        // user embedding 계산 작업을 에약한다.
+        calculateUserEmbedding(user as User, postsRepository).then( async (userEmbedding) => {
+            if (userEmbedding) {
+                await usersRepository.updateUserEmbedding(username, userEmbedding);
+            }
+        })
+
+        res.status(200).send();
+    } catch (err) {
+        next(err);
+    }
+});
+
+// 열람한 게시글 목록
+app.post('/posts/:postId/viewed',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        const postId = String(req.params.postId);
+        const user = req.user;
+        if (!user || !('username' in user) || user.username === undefined || user.username === null) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: '로그인이 필요합니다.'
+            });
+        }
+        const username = String(user.username);
+        const post = await postsRepository.getPost(postId);
+        if (!post) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: '게시글을 찾을 수 없습니다.'
+            });
+        }
+        const viewedPosts = await usersRepository.viewPost(username, postId);
+        (user as User).viewedPosts = viewedPosts;
+
+        // user embedding 계산 작업을 에약한다.
+        calculateUserEmbedding(user as User, postsRepository).then( async (userEmbedding) => {
+            if (userEmbedding) {
+                await usersRepository.updateUserEmbedding(username, userEmbedding);
+            }
+        })
+
+        res.status(200).send();
+    }
+    catch (err) {
+        next(err);
     }
 });
 

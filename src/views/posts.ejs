@@ -12,11 +12,14 @@
             padding: 20px;
         }
         
-        h1 {
+        .page-title-container {
             color: #333;
             margin-bottom: 10px;
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .posts-list {
@@ -77,16 +80,15 @@
         }
         
         .actions {
-            width: 100%;
             display: flex;
-            justify-content: center;
+            justify-content: end;
             gap: 12px;
             margin-bottom: 10px;
         }
         
         .btn {
             display: inline-block;
-            padding: 12px 24px;
+            padding: 12px 16px;
             background: #007bff;
             color: white;
             text-decoration: none;
@@ -179,11 +181,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>게시글 목록</h1>
-        <div class="actions">
-            <a href="/posts/new" class="btn btn-icon btn-primary"><span aria-hidden="true">+</span><span>글 작성하기</span></a>
-            <a href="/posts/new-url" class="btn btn-icon btn-primary"><span aria-hidden="true">🔗</span><span>링크 스크랩하기</span></a>
-        </div>  
+        <div class="page-title-container">
+            <h1>게시글 목록</h1>
+            <span class="actions">
+                <a href="/posts/new" class="btn btn-icon btn-primary"><span>+</span><span>글 작성하기</span></a>
+                <a href="/posts/new-url" class="btn btn-icon btn-primary"><span>🔗</span><span>링크 스크랩하기</span></a>
+            </span>
+        </div>
         <form method="GET" action="" class="search-form">
             <input type="text" name="q" class="search-input" placeholder="검색어를 입력하세요" />
             <button type="submit" class="btn btn-primary">검색</button>

@@ -143,6 +143,37 @@
             background: #59339d;
         }
 
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
     </style>
 </head>
 <body>
@@ -175,6 +206,31 @@
                 <% }); %>
             </div>
         <% } else { %>
+            <div class="posts-list"></div>
+        <% } %>
+
+        <!-- 게시글 row 템플릿 -->
+        <template id="post-template">
+            <article class="post-item">
+                <h2 class="post-title">
+                    <a href=""></a>
+                </h2>
+                <div class="post-meta">
+                    <time datetime=""></time>
+                    <span class="post-author"></span>
+                </div>
+            </article>
+        </template>
+
+        <!-- 로딩 템플릿 -->
+        <template id="loading-template">
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+                <p>더 많은 게시글을 불러오는 중...</p>
+            </div>
+        </template>
+        
+        <% if (!posts || posts.length === 0) { %>
             <div class="no-posts">
                 <p>게시글이 없습니다.</p>
             </div>

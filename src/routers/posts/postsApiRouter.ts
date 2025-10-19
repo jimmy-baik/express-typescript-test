@@ -5,7 +5,7 @@ import { FilesystemUserRepository } from '../../repositories/userRepository';
 import { requireLogin } from '../../middlewares/requireLogin';
 import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from '../../services/contentExtractionService';
 import { calculateUserEmbedding } from '../../services/recommendationService';
-import { searchPostsByEmbeddingWithPagination } from '../../services/searchService';
+import { searchPostsByEmbeddingWithPagination, getFallbackRecommendations } from '../../services/searchService';
 import { Post } from '../../models/posts';
 import { User } from '../../models/users';
 
@@ -28,19 +28,24 @@ router.get('/recommendations',
         const limit = parseInt(req.query.limit as string) || 5;
         const exclude = req.query.exclude ? (req.query.exclude as string).split(',') : [];
 
-        if (!req.user || !('userEmbedding' in req.user) || !req.user.userEmbedding) {
-            return res.status(400).json({
-                error: 'User embedding not found',
-                message: 'User preferences not available'
-            });
-        }
+        let posts: Post[] = [];
 
-        const posts = await searchPostsByEmbeddingWithPagination(
-            req.user.userEmbedding as number[],
-            page,
-            limit,
-            exclude
-        );
+        if (req.user && 'userEmbedding' in req.user && req.user.userEmbedding) {
+            // User has embedding, use personalized recommendations
+            posts = await searchPostsByEmbeddingWithPagination(
+                req.user.userEmbedding as number[],
+                page,
+                limit,
+                exclude
+            );
+        } else {
+            // User has no embedding, use fallback recommendations (recent posts)
+            posts = await getFallbackRecommendations(
+                page,
+                limit,
+                exclude
+            );
+        }
 
         res.json({
             posts: posts,

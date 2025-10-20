@@ -69,7 +69,6 @@ export async function searchPostsByEmbeddingWithPagination(
     limit: number = 5,
     excludeIds: string[] = []
 ) {
-    const from = (page - 1) * limit;
     
     // 제일 좁은 범위의 연관성 검색부터 시작해서 점점 범위를 넓혀가는 검색 전략을 여러 개 선언해놓는다.
     const searchStrategies = [
@@ -210,7 +209,6 @@ export async function searchPostsByEmbeddingWithPagination(
                 index: OPENSEARCH_INDEX_NAME,
                 body: {
                     size: limit,
-                    from: from,
                     query: strategy.query,
                     _source: ['id', 'timestamp', 'title', 'summary', 'content', 'createdBy', 'sourceUrl']
                 }
@@ -223,6 +221,7 @@ export async function searchPostsByEmbeddingWithPagination(
                 console.log(`Used search strategy: ${strategy.name}, found ${results.length} results`);
                 return results;
             }
+            console.log(`Search strategy ${strategy.name} found ${results.length} results. moving on..`);
         } catch (error) {
             console.warn(`Search strategy ${strategy.name} failed:`, error);
             // 오류 발생시 다음 전략으로 넘어간다

@@ -31,7 +31,6 @@ router.get('/recommendations',
         let posts: Post[] = [];
 
         if (req.user && 'userEmbedding' in req.user && req.user.userEmbedding) {
-            // User has embedding, use personalized recommendations
             posts = await searchPostsByEmbeddingWithPagination(
                 req.user.userEmbedding as number[],
                 page,
@@ -39,7 +38,7 @@ router.get('/recommendations',
                 exclude
             );
         } else {
-            // User has no embedding, use fallback recommendations (recent posts)
+            // 유저 임베딩이 없을 경우 사용
             posts = await getFallbackRecommendations(
                 page,
                 limit,

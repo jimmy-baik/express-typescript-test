@@ -38,13 +38,13 @@ router.get('/',
             posts = await postsRepository.getAllPosts() || [];
           }
 
-          res.render('posts', {title: '게시글 목록', posts: posts});
+          res.render('posts', {title: '게시글 목록', posts: posts, userLikedPosts: (req.user as User)?.likedPosts || []});
 
-        } catch (err) {
-            next(err);
         }
+    catch (err) {
+        next(err);
     }
-);
+});
 
 // 새 게시글 작성 페이지
 router.get('/new',

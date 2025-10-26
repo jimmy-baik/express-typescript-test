@@ -5,161 +5,411 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .page-title-container {
-            color: #333;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .posts-list {
-            margin-bottom: 30px;
-        }
-        
-        .post-item {
-            background: #fff;
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .post-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        
-        .post-title {
-            margin: 0 0 10px 0;
-            font-size: 1.5rem;
-        }
-        
-        .post-title a {
-            color: #007bff;
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-        
-        .post-title a:hover {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-        
-        .post-meta {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-        
-        .post-meta time {
-            font-style: italic;
-        }
-        
-        .post-author {
-            margin-left: 15px;
-            color: #495057;
-            font-weight: 500;
-        }
-        
-        .no-posts {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-            font-style: italic;
-        }
-        
-        .actions {
-            display: flex;
-            justify-content: end;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 12px 16px;
-            background: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: background-color 0.2s ease;
-            border: none;
-            outline: none;
-        }
-        
-        .btn:hover {
-            background: #0056b3;
-        }
-        
-        .btn:focus,
-        .btn:active {
-            outline: none;
-            box-shadow: none;
-        }
-        
-        .btn-primary {
-            background: #007bff;
-        }
-        
-        .btn-primary:hover {
-            background: #0056b3;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .search-form {
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-bottom: 1px solid #e6e6e6;
+            z-index: 1000;
+            padding: 0 20px;
+        }
+
+        .header-content {
+            max-width: 1192px;
+            margin: 0 auto;
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
+            justify-content: space-between;
+            height: 60px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hamburger {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hamburger span {
+            width: 100%;
+            height: 2px;
+            background-color: #292929;
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            font-family: 'Charter', Georgia, serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 40px;
+            position: relative;
         }
 
         .search-input {
-            flex: 1;
-            padding: 10px 12px;
-            border: 1px solid #e1e5e9;
-            border-radius: 6px;
-            font-size: 1rem;
+            width: 100%;
+            padding: 8px 16px 8px 40px;
+            border: 1px solid #e6e6e6;
+            border-radius: 20px;
+            background-color: #f9f9f9;
+            font-size: 14px;
+            color: #292929;
+            outline: none;
+            transition: all 0.2s ease;
         }
 
-        .btn-icon {
-            display: inline-flex;
+        .search-input:focus {
+            background-color: #ffffff;
+            border-color: #000000;
+        }
+
+        .search-input::placeholder {
+            color: #6b6b6b;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: #6b6b6b;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .write-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: #ffffff;
+            border: 1px solid #292929;
+            border-radius: 20px;
+            color: #292929;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .write-btn:hover {
+            background: #292929;
+            color: #ffffff;
+        }
+
+        .write-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .notification-icon, .profile-icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            color: #292929;
+        }
+
+        .profile-icon {
+            background: #000000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Navigation */
+        .navigation {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-bottom: 1px solid #e6e6e6;
+            z-index: 999;
+            padding: 0 20px;
+        }
+
+        .nav-content {
+            max-width: 1192px;
+            margin: 0 auto;
+            display: flex;
+            gap: 32px;
+            padding: 16px 0;
+        }
+
+        .nav-tab {
+            color: #6b6b6b;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding-bottom: 8px;
+            position: relative;
+            transition: color 0.2s ease;
+        }
+
+        .nav-tab.active {
+            color: #000000;
+            font-weight: 600;
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #292929;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 40px;
+            padding: 0 20px;
+        }
+
+        .content-container {
+            max-width: 1192px;
+            margin: 0 auto;
+        }
+
+        .posts-list {
+            padding: 40px 0;
+        }
+
+        .post-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            padding: 32px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .post-item:last-child {
+            border-bottom: none;
+        }
+
+        .post-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .post-author-info {
+            display: flex;
             align-items: center;
             gap: 8px;
+            margin-bottom: 8px;
         }
 
-        .btn-create {
-            background: #6f42c1;
+        .author-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e6e6e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #6b6b6b;
         }
 
-        .btn-create:hover {
-            background: #59339d;
+        .author-name {
+            font-size: 13px;
+            color: #292929;
+            font-weight: 500;
+        }
+
+        .verified-badge {
+            width: 12px;
+            height: 12px;
+            color: #1a73e8;
+        }
+
+        .post-title {
+            margin-bottom: 8px;
+        }
+
+        .post-title a {
+            font-size: 20px;
+            font-weight: 700;
+            color: #000000;
+            text-decoration: none;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .post-title a:hover {
+            color: #6b6b6b;
+        }
+
+        .post-subtitle {
+            font-size: 16px;
+            color: #6b6b6b;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: #6b6b6b;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .meta-icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        .post-thumbnail {
+            width: 112px;
+            height: 112px;
+            border-radius: 8px;
+            background: #f0f0f0;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b6b6b;
+            font-size: 12px;
+        }
+
+        .post-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .action-icon {
+            width: 16px;
+            height: 16px;
+            padding: 2px 0;
+            color: #6b6b6b;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .action-icon:hover {
+            color: #292929;
+        }
+
+        .heart-icon {
+            width: 24px;
+            height: 24px;
+            padding: 4px;
+            color: #6b6b6b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+        }
+
+        .heart-icon:hover {
+            color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .heart-icon.liked {
+            color: #dc3545;
+            fill: #dc3545;
+        }
+
+        .heart-icon.liked:hover {
+            color: #b02a37;
+            fill: #b02a37;
+            background-color: #f5c6cb;
+        }
+
+        /* Hidden */
+        .hidden-actions {
+            display: none;
+        }
+
+        .no-posts {
+            text-align: center;
+            padding: 80px 20px;
+            color: #6b6b6b;
         }
 
         .loading-indicator {
             text-align: center;
-            padding: 20px;
-            color: #6c757d;
+            padding: 40px;
+            color: #6b6b6b;
         }
 
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #007bff;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #292929;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            margin: 0 auto 12px;
         }
 
         @keyframes spin {
@@ -177,78 +427,229 @@
             margin: 20px 0;
         }
 
+        /* 반응형 대응 */
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 16px;
+            }
+            
+            .search-container {
+                display: none;
+            }
+            
+            .nav-content {
+                padding: 0 16px;
+            }
+            
+            .main-content {
+                padding: 0 16px;
+            }
+            
+            .post-item {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .post-thumbnail {
+                width: 100%;
+                height: 200px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="page-title-container">
-            <h1>게시글 목록</h1>
-            <span class="actions">
-                <a href="/posts/new" class="btn btn-icon btn-primary"><span>+</span><span>글 작성하기</span></a>
-                <a href="/posts/new-url" class="btn btn-icon btn-primary"><span>🔗</span><span>링크 스크랩하기</span></a>
-            </span>
-        </div>
-        <form method="GET" action="" class="search-form">
-            <input type="text" name="q" class="search-input" placeholder="검색어를 입력하세요" />
-            <button type="submit" class="btn btn-primary">검색</button>
-        </form>
-        <% if (posts && posts.length > 0) { %>
-            <div class="posts-list">
-                <% posts.forEach(function(post) { %>
-                    <article class="post-item">
-                        <h2 class="post-title">
-                            <a href="/posts/<%= post.id %>"><%= post.title %></a>
-                        </h2>
-                        <div class="post-meta">
-                            <time datetime="<%= post.timestamp %>">
-                                <%= new Date(post.timestamp).toLocaleDateString('ko-KR', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                }) %>
-                            </time>
-                            <span class="post-author">등록: <%= post.createdBy %></span>
-                        </div>
-                    </article>
-                <% }); %>
-            </div>
-        <% } else { %>
-            <div class="posts-list"></div>
-        <% } %>
-
-        <!-- 게시글 row 템플릿 -->
-        <template id="post-template">
-            <article class="post-item">
-                <h2 class="post-title">
-                    <a href=""></a>
-                </h2>
-                <div class="post-meta">
-                    <time datetime=""></time>
-                    <span class="post-author"></span>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
-            </article>
-        </template>
-
-        <!-- 로딩 템플릿 -->
-        <template id="loading-template">
-            <div class="loading-indicator">
-                <div class="spinner"></div>
-                <p>더 많은 게시글을 불러오는 중...</p>
             </div>
-        </template>
-        
-        <% if (!posts || posts.length === 0) { %>
-            <div class="no-posts">
-                <p>게시글이 없습니다.</p>
+            <div class="search-container">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <form method="GET" action="" style="display: contents;">
+                    <input type="text" name="q" class="search-input" placeholder="Search" />
+                </form>
             </div>
-        <% } %>
-        
+            <div class="header-right">
+                <a href="/posts/new" class="write-btn">
+                    <svg class="write-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    Write
+                </a>
+                <svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <!-- <div class="profile-icon">U</div> -->
+            </div>
+        </div>
+    </header>
 
-    </div>
+    <!-- 메인 컨텐츠 -->
+    <main class="main-content">
+        <div class="content-container">
+            <% if (posts && posts.length > 0) { %>
+                <div class="posts-list">
+                    <% posts.forEach(function(post) { %>
+                        <article class="post-item">
+                            <div class="post-content">
+                                <div class="post-author-info">
+                                    <span class="author-name"><%= post.createdBy %></span>
+                                </div>
+                                <h2 class="post-title">
+                                    <a href="<%= post.sourceUrl %>"><%= post.title %></a>
+                                </h2>
+                                <div class="post-subtitle">
+                                    <%= post.content ? post.content.substring(0, 150) + '...' : '설명 없음' %>
+                                </div>
+                                <div class="post-meta">
+                                    <div class="meta-item">
+                                        <span><%= new Date(post.timestamp).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) %></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="post-actions">
+                                <svg class="heart-icon <%= (userLikedPosts && userLikedPosts.includes(post.id)) ? 'liked' : '' %>" 
+                                     viewBox="0 0 24 24" 
+                                     fill="<%= (userLikedPosts && userLikedPosts.includes(post.id)) ? 'currentColor' : 'none' %>" 
+                                     stroke="currentColor" 
+                                     stroke-width="2"
+                                     data-post-id="<%= post.id %>"
+                                     onclick="toggleLike('<%= post.id %>')">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"></circle>
+                                    <circle cx="19" cy="12" r="1"></circle>
+                                    <circle cx="5" cy="12" r="1"></circle>
+                                </svg>
+                            </div>
+                        </article>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <div class="posts-list"></div>
+            <% } %>
+
+            <!-- 게시글 row 템플릿 -->
+            <template id="post-template">
+                <article class="post-item">
+                    <div class="post-content">
+                        <div class="post-author-info">
+                            <span class="author-name"></span>
+                        </div>
+                        <h2 class="post-title">
+                            <a href=""></a>
+                        </h2>
+                        <div class="post-subtitle"></div>
+                        <div class="post-meta">
+                            <div class="meta-item">
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="post-actions">
+                        <svg class="heart-icon" 
+                             viewBox="0 0 24 24" 
+                             fill="none" 
+                             stroke="currentColor" 
+                             stroke-width="2"
+                             data-post-id=""
+                             onclick="toggleLike('')">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="19" cy="12" r="1"></circle>
+                            <circle cx="5" cy="12" r="1"></circle>
+                        </svg>
+                    </div>
+                </article>
+            </template>
+
+            <!-- 로딩 템플릿 -->
+            <template id="loading-template">
+                <div class="loading-indicator">
+                    <div class="spinner"></div>
+                    <p>더 많은 게시글을 불러오는 중...</p>
+                </div>
+            </template>
+            
+            <% if (!posts || posts.length === 0) { %>
+                <div class="no-posts">
+                    <p>게시글이 없습니다.</p>
+                </div>
+            <% } %>
+        </div>
+    </main>
 
 </body>
 <script src="/js/posts.js"></script>
+<script>
+    // Like toggle functionality
+    function toggleLike(postId) {
+        const heartIcon = document.querySelector(`[data-post-id="${postId}"]`);
+        if (!heartIcon) return;
+        
+        const isLiked = heartIcon.classList.contains('liked');
+        
+        // Toggle visual state immediately for better UX
+        if (isLiked) {
+            heartIcon.classList.remove('liked');
+            heartIcon.setAttribute('fill', 'none');
+        } else {
+            heartIcon.classList.add('liked');
+            heartIcon.setAttribute('fill', 'currentColor');
+        }
+        
+        // Send request to server
+        fetch(`/api/${postId}/liked`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ liked: !isLiked })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data.success) {
+                // Revert visual state if server request failed
+                if (isLiked) {
+                    heartIcon.classList.add('liked');
+                    heartIcon.setAttribute('fill', 'currentColor');
+                } else {
+                    heartIcon.classList.remove('liked');
+                    heartIcon.setAttribute('fill', 'none');
+                }
+                console.error('Failed to toggle like:', data.error);
+            }
+        })
+        .catch(error => {
+            // Revert visual state if request failed
+            if (isLiked) {
+                heartIcon.classList.add('liked');
+                heartIcon.setAttribute('fill', 'currentColor');
+            } else {
+                heartIcon.classList.remove('liked');
+                heartIcon.setAttribute('fill', 'none');
+            }
+            console.error('Error toggling like:', error);
+        });
+    }
+</script>
 </html>
 

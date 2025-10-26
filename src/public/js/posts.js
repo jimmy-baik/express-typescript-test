@@ -170,10 +170,41 @@ class InfiniteScrollFeedController {
     }
 }
 
+function toggleLike(postId) {
+    const heartIcon = document.querySelector('.heart-icon[data-post-id="' + postId + '"]');
+    fetch(`/api/posts/${postId}/like`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            if (response.ok) {
+                heartIcon.classList.toggle('liked');
+            } else {
+                throw new Error('좋아요 처리에 실패했습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     if (document.querySelector('.posts-list')) {
         new InfiniteScrollFeedController();
     }
 
+    // 좋아요 버튼 이벤트 리스너
+    const likeButtons = document.querySelectorAll('.heart-icon');
+    likeButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const postId = e.target.getAttribute('data-post-id');
+            toggleLike(postId);
+        });
+    });
+
 });
+
+s

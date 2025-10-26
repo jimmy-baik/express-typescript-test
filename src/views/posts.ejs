@@ -434,7 +434,34 @@
             }
             
             .search-container {
-                display: none;
+                max-width: 200px;
+                margin: 0 16px;
+            }
+            
+            .search-input {
+                font-size: 12px;
+                padding: 6px 12px 6px 32px;
+            }
+            
+            .search-icon {
+                left: 8px;
+                width: 14px;
+                height: 14px;
+            }
+            
+            .write-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .write-icon {
+                width: 14px;
+                height: 14px;
+            }
+            
+            .notification-icon {
+                width: 20px;
+                height: 20px;
             }
             
             .nav-content {
@@ -453,6 +480,39 @@
             .post-thumbnail {
                 width: 100%;
                 height: 200px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .search-container {
+                max-width: 150px;
+                margin: 0 8px;
+            }
+            
+            .search-input {
+                font-size: 11px;
+                padding: 5px 10px 5px 28px;
+            }
+            
+            .search-icon {
+                left: 6px;
+                width: 12px;
+                height: 12px;
+            }
+            
+            .write-btn {
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+            
+            .write-icon {
+                width: 12px;
+                height: 12px;
+            }
+            
+            .notification-icon {
+                width: 18px;
+                height: 18px;
             }
         }
     </style>
@@ -474,16 +534,16 @@
                     <path d="m21 21-4.35-4.35"></path>
                 </svg>
                 <form method="GET" action="" style="display: contents;">
-                    <input type="text" name="q" class="search-input" placeholder="Search" />
+                    <input type="text" name="q" class="search-input" placeholder="검색" />
                 </form>
             </div>
             <div class="header-right">
-                <a href="/posts/new" class="write-btn">
+                <a href="/posts/new-url" class="write-btn">
                     <svg class="write-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    Write
+                    추가하기
                 </a>
                 <svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -523,15 +583,14 @@
                                      fill="<%= (userLikedPosts && userLikedPosts.includes(post.id)) ? 'currentColor' : 'none' %>" 
                                      stroke="currentColor" 
                                      stroke-width="2"
-                                     data-post-id="<%= post.id %>"
-                                     onclick="toggleLike('<%= post.id %>')">
+                                     data-post-id="<%= post.id %>">
                                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                 </svg>
-                                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <!-- <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="1"></circle>
                                     <circle cx="19" cy="12" r="1"></circle>
                                     <circle cx="5" cy="12" r="1"></circle>
-                                </svg>
+                                </svg> -->
                             </div>
                         </article>
                     <% }); %>
@@ -563,14 +622,8 @@
                              fill="none" 
                              stroke="currentColor" 
                              stroke-width="2"
-                             data-post-id=""
-                             onclick="toggleLike('')">
+                             data-post-id="">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                        </svg>
-                        <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="1"></circle>
-                            <circle cx="19" cy="12" r="1"></circle>
-                            <circle cx="5" cy="12" r="1"></circle>
                         </svg>
                     </div>
                 </article>
@@ -594,62 +647,5 @@
 
 </body>
 <script src="/js/posts.js"></script>
-<script>
-    // Like toggle functionality
-    function toggleLike(postId) {
-        const heartIcon = document.querySelector(`[data-post-id="${postId}"]`);
-        if (!heartIcon) return;
-        
-        const isLiked = heartIcon.classList.contains('liked');
-        
-        // Toggle visual state immediately for better UX
-        if (isLiked) {
-            heartIcon.classList.remove('liked');
-            heartIcon.setAttribute('fill', 'none');
-        } else {
-            heartIcon.classList.add('liked');
-            heartIcon.setAttribute('fill', 'currentColor');
-        }
-        
-        // Send request to server
-        fetch(`/api/${postId}/liked`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ liked: !isLiked })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (!data.success) {
-                // Revert visual state if server request failed
-                if (isLiked) {
-                    heartIcon.classList.add('liked');
-                    heartIcon.setAttribute('fill', 'currentColor');
-                } else {
-                    heartIcon.classList.remove('liked');
-                    heartIcon.setAttribute('fill', 'none');
-                }
-                console.error('Failed to toggle like:', data.error);
-            }
-        })
-        .catch(error => {
-            // Revert visual state if request failed
-            if (isLiked) {
-                heartIcon.classList.add('liked');
-                heartIcon.setAttribute('fill', 'currentColor');
-            } else {
-                heartIcon.classList.remove('liked');
-                heartIcon.setAttribute('fill', 'none');
-            }
-            console.error('Error toggling like:', error);
-        });
-    }
-</script>
 </html>
 

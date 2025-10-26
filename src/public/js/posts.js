@@ -13,7 +13,7 @@ class InfiniteScrollFeedController {
     init() {
         const existingPosts = document.querySelectorAll('.post-item');
         existingPosts.forEach(post => {
-            const postId = post.querySelector('a').href.split('/').pop();
+            const postId = post.querySelector('a[data-post-id]').getAttribute('data-post-id');
             this.loadedPostIds.add(postId);
         });
 

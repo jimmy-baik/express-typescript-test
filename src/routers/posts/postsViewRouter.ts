@@ -1,4 +1,5 @@
 import express from 'express';
+import { stripHtml } from "string-strip-html";
 import { FilesystemPostRepository } from '../../repositories/postRepository';
 import { FilesystemUserRepository } from '../../repositories/userRepository';
 import { requireLogin } from '../../middlewares/requireLogin';
@@ -38,7 +39,12 @@ router.get('/',
             posts = await postsRepository.getAllPosts() || [];
           }
 
-          res.render('posts', {title: '게시글 목록', posts: posts, userLikedPosts: (req.user as User)?.likedPosts || []});
+          const htmlStrippedPosts = posts.map(post => {
+            post.content = stripHtml(post.content).result;
+            return post;
+          });
+
+          res.render('posts', {title: '게시글 목록', posts: htmlStrippedPosts, userLikedPosts: (req.user as User)?.likedPosts || []});
 
         }
     catch (err) {

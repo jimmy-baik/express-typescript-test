@@ -329,7 +329,7 @@
                                     <span class="author-name"><%= post.createdBy %></span>
                                 </div>
                                 <h2 class="post-title">
-                                    <a href="<%= post.sourceUrl %>"><%= post.title %></a>
+                                    <a href="<%= post.sourceUrl %>" data-post-id="<%= post.id %>"><%= post.title %></a>
                                 </h2>
                                 <div class="post-subtitle">
                                     <%= post.content ? post.content.substring(0, 150) + '...' : '설명 없음' %>

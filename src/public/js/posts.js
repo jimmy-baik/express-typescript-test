@@ -190,6 +190,46 @@ function toggleLike(postId) {
         });
 }
 
+function logUserVisitedPost(postId) {
+    
+    fetch(`/api/posts/${postId}/viewed`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('게시글 열람이력 추적에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('게시글 열람이력 기록 중 오류가 발생했습니다:', error);
+    });
+}
+
+function deletePost(postId) {
+    if (confirm('게시글을 삭제하시겠습니까?')) {
+        fetch(`/posts/${postId}`, {
+            method: 'DELETE',
+            redirect: 'follow'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('삭제에 실패했습니다.');
+                }
+
+                if (response.redirected) {
+                    window.location.href = response.url;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('삭제 중 오류가 발생했습니다.');
+            });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     if (document.querySelector('.posts-list')) {
@@ -202,6 +242,15 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function(e) {
             const postId = e.target.getAttribute('data-post-id');
             toggleLike(postId);
+        });
+    });
+
+    // 게시글 열람이력 추적
+    const postLinks = document.querySelectorAll('a[data-post-id]');
+    postLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const postId = e.target.getAttribute('data-post-id');
+            logUserVisitedPost(postId);
         });
     });
 

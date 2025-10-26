@@ -12,11 +12,14 @@
             padding: 20px;
         }
         
-        h1 {
+        .page-title-container {
             color: #333;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .posts-list {
@@ -77,15 +80,15 @@
         }
         
         .actions {
-            margin-top: 30px;
             display: flex;
-            justify-content: center;
+            justify-content: end;
             gap: 12px;
+            margin-bottom: 10px;
         }
         
         .btn {
             display: inline-block;
-            padding: 12px 24px;
+            padding: 12px 16px;
             background: #007bff;
             color: white;
             text-decoration: none;
@@ -143,11 +146,48 @@
             background: #59339d;
         }
 
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>게시글 목록</h1>  
+        <div class="page-title-container">
+            <h1>게시글 목록</h1>
+            <span class="actions">
+                <a href="/posts/new" class="btn btn-icon btn-primary"><span>+</span><span>글 작성하기</span></a>
+                <a href="/posts/new-url" class="btn btn-icon btn-primary"><span>🔗</span><span>링크 스크랩하기</span></a>
+            </span>
+        </div>
         <form method="GET" action="" class="search-form">
             <input type="text" name="q" class="search-input" placeholder="검색어를 입력하세요" />
             <button type="submit" class="btn btn-primary">검색</button>
@@ -175,17 +215,40 @@
                 <% }); %>
             </div>
         <% } else { %>
+            <div class="posts-list"></div>
+        <% } %>
+
+        <!-- 게시글 row 템플릿 -->
+        <template id="post-template">
+            <article class="post-item">
+                <h2 class="post-title">
+                    <a href=""></a>
+                </h2>
+                <div class="post-meta">
+                    <time datetime=""></time>
+                    <span class="post-author"></span>
+                </div>
+            </article>
+        </template>
+
+        <!-- 로딩 템플릿 -->
+        <template id="loading-template">
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+                <p>더 많은 게시글을 불러오는 중...</p>
+            </div>
+        </template>
+        
+        <% if (!posts || posts.length === 0) { %>
             <div class="no-posts">
                 <p>게시글이 없습니다.</p>
             </div>
         <% } %>
         
-        <div class="actions">
-            <a href="/posts/new" class="btn btn-icon btn-primary"><span aria-hidden="true">+</span><span>글 작성하기</span></a>
-            <a href="/posts/new-url" class="btn btn-icon btn-primary"><span aria-hidden="true">🔗</span><span>링크 스크랩하기</span></a>
-        </div>
+
     </div>
 
 </body>
+<script src="/js/posts.js"></script>
 </html>
 

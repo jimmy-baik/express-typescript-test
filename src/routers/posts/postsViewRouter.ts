@@ -46,17 +46,6 @@ router.get('/',
     }
 });
 
-// 새 게시글 작성 페이지
-router.get('/new',
-    requireLogin,
-    async (req, res, next) => {
-    try {
-        res.render('new-post', {title: '새 게시글'});
-    } catch (err) {
-        next(err);
-    }
-});
-
 // 새 URL 스크랩 페이지
 router.get('/new-url',
     requireLogin,
@@ -65,22 +54,6 @@ router.get('/new-url',
         res.render('new-url', {title: '새 스크랩'});
     } catch (err) {
         next(err);
-    }
-});
-
-// 특정 게시글 조회
-router.get('/:postId',
-    requireLogin,
-    async (req,res) => {
-    try {
-        const postId = String(req.params.postId);
-        const post = await postsRepository.getPost(postId);
-        if (!post) {
-            throw new Error('게시글을 찾을 수 없습니다.');
-        }
-        res.render('single-post', {title: '게시글', post: post});
-    } catch (err) {
-        res.sendStatus(404);
     }
 });
 

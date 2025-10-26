@@ -40,7 +40,7 @@ router.get('/',
           }
 
           const htmlStrippedPosts = posts.map(post => {
-            post.content = stripHtml(post.content).result;
+            post.content = stripHtml(post.content.substring(0, 200)).result || stripHtml(post.content).result.substring(0, 200);
             return post;
           });
 

@@ -177,11 +177,29 @@ class InfiniteScrollFeedController {
                 this.loadedPostIds.add(post.id);
             }
         });
+        // scrollTarget을 리스트의 마지막으로 이동
+        this.moveScrollTargetToEnd();
+    }
+
+    moveScrollTargetToEnd() {
+        const scrollTarget = document.querySelector('#scroll-target');
+        if (scrollTarget && this.postsContainer) {
+
+            // 맨 끝으로 이동 (appendChild는 자동으로 이동)
+            this.postsContainer.appendChild(scrollTarget);
+        }
     }
 
     showLoadingIndicator() {
         this.loadingIndicator.style.display = 'block';
-        this.postsContainer.appendChild(this.loadingIndicator);
+        const scrollTarget = document.querySelector('#scroll-target');
+        if (scrollTarget && scrollTarget.parentNode === this.postsContainer) {
+            // scrollTarget 앞에 로딩 인디케이터 삽입
+            this.postsContainer.insertBefore(this.loadingIndicator, scrollTarget);
+        } else {
+            // scrollTarget이 없으면 맨 끝에 추가
+            this.postsContainer.appendChild(this.loadingIndicator);
+        }
     }
 
     hideLoadingIndicator() {
@@ -303,14 +321,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 무한 스크롤 컨트롤러를 intersection observer에 연결한다.
     const feedController = new InfiniteScrollFeedController();
+    
     const scrollObserver = new IntersectionObserver((entries) => {
-        // entry가 한 개일 때를 가정한다. intersectionRatio가 0보다 작으면 무시한다.
-        if (entries[0].intersectionRatio <= 0) {
-            return;
-        }
-
-        // intersection ratio가 0보다 크면 더 많은 추천 게시글을 불러온다.
-        feedController.loadMorePosts();
+        entries.forEach(entry => {
+            // isIntersecting이 true이고 intersectionRatio가 0보다 크면 트리거
+            if (entry.isIntersecting && entry.intersectionRatio > 0) {
+                feedController.loadMorePosts();
+            }
+        });
     });
     scrollObserver.observe(scrollTarget);
 

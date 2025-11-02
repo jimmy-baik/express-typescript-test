@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { FilesystemPostRepository } from '../../repositories/postRepository';
 import { FilesystemUserRepository } from '../../repositories/userRepository';
 import { requireLogin } from '../../middlewares/requireLogin';
-import { extractArticle, summarizeArticleContent, createPostEmbedding } from '../../services/contentExtractionService';
+import { ingestContent } from '../../services/contentExtractionService';
 import { calculateUserEmbedding } from '../../services/recommendationService';
 import { searchPostsByEmbeddingWithPagination, getFallbackRecommendations } from '../../services/searchService';
 import { Post } from '../../models/posts';
@@ -87,32 +87,8 @@ router.post('/from-url',
         const createdByUsername = String(req.user.username);
         const sourceUrl = String(req.body.url);
 
-        // 컨텐츠 추출작업 예약
-        extractArticle(sourceUrl, createdByUsername).then(async (post) => {
-            // 요약과 임베딩을 병렬로 생성한다
-            const [summary, embedding] = await Promise.all([
-                summarizeArticleContent(post.content).catch((err) => {
-                    console.log(err);
-                    return null;
-                }),
-                createPostEmbedding(post.content).catch((err) => {
-                    console.log(err);
-                    return null;
-                })
-            ]);
-
-            if (summary === null || embedding === null) {
-                throw new Error('요약과 임베딩 생성에 실패했습니다.');
-            }
-
-            // 요약을 포함하여 게시글을 저장한다
-            post.summary = summary;
-            post.embedding = embedding;
-            post.sourceUrl = sourceUrl;
-            await postsRepository.createPost(post);
-        }).catch((err) => {
-            console.log(err);
-        });
+        // ingest 작업 예약
+        ingestContent(sourceUrl, createdByUsername, postsRepository);
 
         // 작업 예약 후 바로 종료
         res.redirect('/posts');

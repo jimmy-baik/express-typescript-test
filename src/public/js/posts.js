@@ -16,8 +16,6 @@ class InfiniteScrollFeedController {
             const postId = post.querySelector('a[data-post-id]').getAttribute('data-post-id');
             this.loadedPostIds.add(postId);
         });
-
-        window.addEventListener('scroll', () => this.handleScroll()); // handler 내부에서 클래스 인스턴스 this 에 접근 가능하도록 arrow function으로 감싼다
     }
 
     createLoadingIndicator() {
@@ -80,18 +78,18 @@ class InfiniteScrollFeedController {
         return article;
     }
 
-    async handleScroll() {
-        if (this.isLoading || !this.hasMore) return;
+    // async handleScroll() {
+    //     if (this.isLoading || !this.hasMore) return;
 
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
+    //     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    //     const windowHeight = window.innerHeight;
+    //     const documentHeight = document.documentElement.scrollHeight;
 
-        // 스크롤이 200px 남았으면 더 많은 추천 게시글을 불러온다.
-        if (scrollTop + windowHeight >= documentHeight - 200) {
-            await this.loadMorePosts();
-        }
-    }
+    //     // 스크롤이 200px 남았으면 더 많은 추천 게시글을 불러온다.
+    //     if (scrollTop + windowHeight >= documentHeight - 200) {
+    //         await this.loadMorePosts();
+    //     }
+    // }
 
     async loadMorePosts() {
         if (this.isLoading || !this.hasMore) return;
@@ -232,9 +230,26 @@ function deletePost(postId) {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    if (document.querySelector('.posts-list')) {
-        new InfiniteScrollFeedController();
+    const postsList = document.querySelector('.posts-list');
+    const scrollTarget = document.querySelector('#scroll-target');
+
+    if (!postsList || !scrollTarget) {
+        // posts-list 또는 scroll-target 엘리먼트가 없으면 무한 스크롤을 사용하지 않는다.
+        return;
     }
+    
+    // 무한 스크롤 컨트롤러를 intersection observer에 연결한다.
+    const feedController = new InfiniteScrollFeedController();
+    const scrollObserver = new IntersectionObserver((entries) => {
+        // entry가 한 개일 때를 가정한다. intersectionRatio가 0보다 작으면 무시한다.
+        if (entries[0].intersectionRatio <= 0) {
+            return;
+        }
+
+        // intersection ratio가 0보다 크면 더 많은 추천 게시글을 불러온다.
+        feedController.loadMorePosts();
+    });
+    scrollObserver.observe(scrollTarget);
 
     // 좋아요 버튼 이벤트 리스너
     const likeButtons = document.querySelectorAll('.heart-icon');

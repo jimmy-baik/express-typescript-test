@@ -3,7 +3,7 @@ import { stripHtml } from "string-strip-html";
 import { FilesystemPostRepository } from '../../repositories/postRepository';
 import { FilesystemUserRepository } from '../../repositories/userRepository';
 import { requireLogin } from '../../middlewares/requireLogin';
-import { createEmbedding } from '../../services/contentExtractionService';
+import { createPostEmbedding } from '../../services/contentExtractionService';
 import { calculateUserEmbedding } from '../../services/recommendationService';
 import { searchPosts, searchPostsByEmbedding } from '../../services/searchService';
 import { Post } from '../../models/posts';
@@ -29,7 +29,7 @@ router.get('/',
 
           if (userQuery) {
             // 1.검색 - 검색어가 붙어있으면 hybrid search 검색 결과를 표시해준다.
-            const queryEmbedding = await createEmbedding(userQuery);
+            const queryEmbedding = await createPostEmbedding(userQuery);
             posts = await searchPosts(userQuery, queryEmbedding) || [];
           } else if (req.user && 'userEmbedding' in req.user && req.user.userEmbedding as number[]) {
             // 2. 추천 - 검색어는 없는데 user embedding이 있으면 user embedding을 이용해서 추천 아티클을 검색한다.

@@ -1,6 +1,6 @@
 import express from 'express';
 import { requireLogin } from '../../middlewares/requireLogin';
-import { createEmbedding } from '../../services/contentExtractionService';
+import { createPostEmbedding } from '../../services/contentExtractionService';
 import { searchPosts } from '../../services/searchService';
 
 const router = express.Router();
@@ -14,7 +14,7 @@ router.get('/',
         if (!userQuery) {
             return res.status(400).json({ error: '잘못된 요청입니다.', message: '검색어 파라미터가 필요합니다.' });
         }
-        const queryEmbedding = await createEmbedding(userQuery);
+        const queryEmbedding = await createPostEmbedding(userQuery);
         const searchResults = await searchPosts(userQuery, queryEmbedding);
         res.json({count: searchResults.length, results: searchResults});
     } catch (err) {

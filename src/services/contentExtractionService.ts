@@ -3,9 +3,11 @@ import { extract, ArticleData } from '@extractus/article-extractor';
 import { Post } from '../models/posts';
 import { FilesystemPostRepository } from '../repositories/postRepository';
 import { llmClient, getEmbedding } from '../adapters/llm';
+import { fetchTranscript } from 'youtube-transcript-plus';
+import { TranscriptResponse } from 'youtube-transcript-plus/dist/types';
+import { Innertube } from 'youtubei.js';
 
-
-export async function extractArticleContentFromUrl(url: string, createdByUsername: string): Promise<Post> {
+export async function extractArticle(url: string, createdByUsername: string): Promise<Post> {
     const article = await extract(url);
     if (!article || article.content === undefined) {
         throw new Error('글을 추출할 수 없습니다.');
@@ -23,6 +25,20 @@ export async function extractArticleContentFromUrl(url: string, createdByUsernam
     };
 }
 
+export async function extractYoutubeTranscript(url: string, createdByUsername: string): Promise<Post> {
+    const [transcripts, videoInfo] = await Promise.all([fetchTranscript(url), getYoutubeVideoInfo(url)]);
+    const transcriptText = transcripts.map((item: TranscriptResponse) => item.text).join('\n');
+    return {
+      id: String(randomUUID()),
+      title: videoInfo.title || '',
+      timestamp: new Date(),
+      content: `${videoInfo.description}\n${transcriptText}`,
+      createdBy: createdByUsername,
+      summary: null,
+      embedding: null,
+      sourceUrl: url
+  };
+}
 
 export async function summarizeArticleContent(content: string): Promise<string> {
   const response = await llmClient.models.generateContent({
@@ -36,6 +52,16 @@ export async function summarizeArticleContent(content: string): Promise<string> 
 }
 
 
-export async function createEmbedding(content: string): Promise<number[]> {
+export async function createPostEmbedding(content: string): Promise<number[]> {
   return await getEmbedding(content);
+}
+
+export async function getYoutubeVideoInfo(url: string): Promise<{title: string, description: string}> {
+
+  const video = await Innertube.create({lang:'ko'});
+  const videoInfo = await video.getBasicInfo(url);
+  return {
+    title: videoInfo.basic_info.title || '',
+    description: videoInfo.basic_info.short_description || ''
+  };
 }

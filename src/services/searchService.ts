@@ -1,4 +1,4 @@
-import { createEmbedding } from "./contentExtractionService";
+import { createPostEmbedding } from "./contentExtractionService";
 import { opensearchClient, OPENSEARCH_INDEX_NAME } from "../adapters/opensearch";
 import { Post } from "../models/posts";
 

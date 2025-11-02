@@ -8,6 +8,7 @@ import { calculateUserEmbedding } from '../../services/recommendationService';
 import { searchPostsByEmbeddingWithPagination, getFallbackRecommendations } from '../../services/searchService';
 import { Post } from '../../models/posts';
 import { User } from '../../models/users';
+import { stripHtml } from "string-strip-html";
 
 const router = express.Router();
 
@@ -46,8 +47,13 @@ router.get('/recommendations',
             );
         }
 
+        const htmlStrippedPosts = posts.map(post => {
+            post.content = stripHtml(post.content.substring(0, 200)).result || stripHtml(post.content).result.substring(0, 200);
+            return post;
+        });
+
         res.json({
-            posts: posts,
+            posts: htmlStrippedPosts,
             hasMore: posts.length === limit,
             page: page
         });

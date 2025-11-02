@@ -93,6 +93,31 @@ class InfiniteScrollFeedController {
             heartIcon.setAttribute('data-post-id', post.id);
         }
 
+        // 아코디언 설정 (summary가 있는 경우)
+        if (post.summary) {
+            const accordionSection = article.querySelector('.accordion-section');
+            const accordionSummary = article.querySelector('.accordion-summary');
+            const viewFullBtn = article.querySelector('.view-full-btn');
+            
+            if (accordionSection) {
+                accordionSection.setAttribute('data-post-id', post.id);
+            }
+            
+            if (accordionSummary) {
+                accordionSummary.textContent = post.summary;
+            }
+            
+            if (viewFullBtn && post.sourceUrl) {
+                viewFullBtn.href = post.sourceUrl;
+            }
+        } else {
+            // summary가 없으면 아코디언 섹션 제거
+            const accordionSection = article.querySelector('.accordion-section');
+            if (accordionSection) {
+                accordionSection.remove();
+            }
+        }
+
         return article;
     }
 
@@ -251,6 +276,21 @@ function deletePost(postId) {
     }
 }
 
+function toggleAccordion(clickedAccordion) {
+    // // 모든 아코디언 섹션을 가져온다
+    // const allAccordions = document.querySelectorAll('.accordion-section');
+    
+    // // 클릭된 아코디언을 제외한 나머지를 모두 닫는다
+    // allAccordions.forEach(accordion => {
+    //     if (accordion !== clickedAccordion) {
+    //         accordion.classList.remove('expanded');
+    //     }
+    // });
+    
+    // 클릭된 아코디언을 토글한다
+    clickedAccordion.classList.toggle('expanded');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     const postsList = document.querySelector('.posts-list');
@@ -299,6 +339,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-});
+    // 아코디언 토글 이벤트 리스너
+    postsList.addEventListener('click', function(e) {
+        // 클릭된 요소가 accordion-toggle 버튼이거나 그 자식인지 확인
+        const accordionToggle = e.target.closest('.accordion-toggle');
+        if (accordionToggle) {
+            e.preventDefault();
+            const accordionSection = accordionToggle.closest('.accordion-section');
+            if (accordionSection) {
+                toggleAccordion(accordionSection);
+            }
+        }
+    });
 
-s
+});

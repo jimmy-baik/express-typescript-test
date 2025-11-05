@@ -105,7 +105,7 @@ passport.deserializeUser(async (username: string, done) => {
 
 // 기본 라우트
 app.get('/', (req, res) => {
-    res.send("Hello!");
+    res.redirect('/posts');
 });
 
 

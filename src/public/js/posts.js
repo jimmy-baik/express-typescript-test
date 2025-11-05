@@ -16,8 +16,6 @@ class InfiniteScrollFeedController {
             const postId = post.querySelector('a[data-post-id]').getAttribute('data-post-id');
             this.loadedPostIds.add(postId);
         });
-
-        window.addEventListener('scroll', () => this.handleScroll()); // handler 내부에서 클래스 인스턴스 this 에 접근 가능하도록 arrow function으로 감싼다
     }
 
     createLoadingIndicator() {
@@ -50,48 +48,66 @@ class InfiniteScrollFeedController {
         // 템플릿을 복제한다.
         const article = template.content.cloneNode(true);
         
+        // 날짜 포맷팅
         const formattedDate = new Date(post.timestamp).toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            month: 'short',
+            day: 'numeric'
         });
 
+        // 본문 미리보기 포맷팅
+        const contentPreview = post.content 
+            ? (post.content.length > 150 ? post.content.substring(0, 150) + '...' : post.content)
+            : '설명 없음';
+
         // 게시글 데이터를 템플릿에 업데이트한다.
+        const authorName = article.querySelector('.post-author-info .author-name');
         const titleLink = article.querySelector('.post-title a');
-        const timeElement = article.querySelector('time');
-        const authorSpan = article.querySelector('.post-author');
+        const subtitleDiv = article.querySelector('.post-subtitle');
+        const dateSpan = article.querySelector('.post-meta .meta-item span');
+        const heartIcon = article.querySelector('.heart-icon');
 
+        // 글쓴이 설정
+        if (authorName) {
+            authorName.textContent = post.createdBy;
+        }
+
+        // 제목 링크 설정
         if (titleLink) {
-            titleLink.href = `/posts/${post.id}`;
+            titleLink.href = post.sourceUrl || `/posts/${post.id}`;
             titleLink.textContent = post.title;
+            titleLink.setAttribute('data-post-id', post.id);
         }
 
-        if (timeElement) {
-            timeElement.setAttribute('datetime', post.timestamp);
-            timeElement.textContent = formattedDate;
+        // 본문 미리보기 설정
+        if (subtitleDiv) {
+            subtitleDiv.textContent = contentPreview;
         }
 
-        if (authorSpan) {
-            authorSpan.textContent = `등록: ${post.createdBy}`;
+        // 날짜 설정
+        if (dateSpan) {
+            dateSpan.textContent = formattedDate;
+        }
+
+        // 좋아요 버튼 data-post-id 설정
+        if (heartIcon) {
+            heartIcon.setAttribute('data-post-id', post.id);
         }
 
         return article;
     }
 
-    async handleScroll() {
-        if (this.isLoading || !this.hasMore) return;
+    // async handleScroll() {
+    //     if (this.isLoading || !this.hasMore) return;
 
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
+    //     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    //     const windowHeight = window.innerHeight;
+    //     const documentHeight = document.documentElement.scrollHeight;
 
-        // 스크롤이 200px 남았으면 더 많은 추천 게시글을 불러온다.
-        if (scrollTop + windowHeight >= documentHeight - 200) {
-            await this.loadMorePosts();
-        }
-    }
+    //     // 스크롤이 200px 남았으면 더 많은 추천 게시글을 불러온다.
+    //     if (scrollTop + windowHeight >= documentHeight - 200) {
+    //         await this.loadMorePosts();
+    //     }
+    // }
 
     async loadMorePosts() {
         if (this.isLoading || !this.hasMore) return;
@@ -170,8 +186,7 @@ class InfiniteScrollFeedController {
     }
 }
 
-function toggleLike(postId) {
-    const heartIcon = document.querySelector('.heart-icon[data-post-id="' + postId + '"]');
+function toggleLike(postId, heartIcon) {
     fetch(`/api/posts/${postId}/like`, {
         method: 'POST',
         headers: {
@@ -181,6 +196,12 @@ function toggleLike(postId) {
         .then(response => {
             if (response.ok) {
                 heartIcon.classList.toggle('liked');
+                // fill 속성도 업데이트
+                if (heartIcon.classList.contains('liked')) {
+                    heartIcon.setAttribute('fill', 'currentColor');
+                } else {
+                    heartIcon.setAttribute('fill', 'none');
+                }
             } else {
                 throw new Error('좋아요 처리에 실패했습니다.');
             }
@@ -232,26 +253,50 @@ function deletePost(postId) {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    if (document.querySelector('.posts-list')) {
-        new InfiniteScrollFeedController();
-    }
+    const postsList = document.querySelector('.posts-list');
+    const scrollTarget = document.querySelector('#scroll-target');
 
-    // 좋아요 버튼 이벤트 리스너
-    const likeButtons = document.querySelectorAll('.heart-icon');
-    likeButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            const postId = e.target.getAttribute('data-post-id');
-            toggleLike(postId);
-        });
+    if (!postsList || !scrollTarget) {
+        // posts-list 또는 scroll-target 엘리먼트가 없으면 무한 스크롤을 사용하지 않는다.
+        return;
+    }
+    
+    // 무한 스크롤 컨트롤러를 intersection observer에 연결한다.
+    const feedController = new InfiniteScrollFeedController();
+    const scrollObserver = new IntersectionObserver((entries) => {
+        // entry가 한 개일 때를 가정한다. intersectionRatio가 0보다 작으면 무시한다.
+        if (entries[0].intersectionRatio <= 0) {
+            return;
+        }
+
+        // intersection ratio가 0보다 크면 더 많은 추천 게시글을 불러온다.
+        feedController.loadMorePosts();
+    });
+    scrollObserver.observe(scrollTarget);
+
+    // 좋아요 버튼 클릭시 이벤트 리스너. 목록이 동적으로 바뀌므로 상위 요소에 리스너를 추가해서 위임한다.
+    postsList.addEventListener('click', function(e) {
+        // 클릭된 요소가 heart-icon이거나 그 자식인지 확인
+        const heartIcon = e.target.closest('.heart-icon');
+        if (heartIcon) {
+            e.preventDefault();
+            const postId = heartIcon.getAttribute('data-post-id');
+            if (postId) {
+                toggleLike(postId, heartIcon);
+            }
+        }
     });
 
     // 게시글 열람이력 추적
-    const postLinks = document.querySelectorAll('a[data-post-id]');
-    postLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            const postId = e.target.getAttribute('data-post-id');
-            logUserVisitedPost(postId);
-        });
+    postsList.addEventListener('click', function(e) {
+        // 클릭된 요소가 data-post-id를 가진 링크인지 확인
+        const postLink = e.target.closest('a[data-post-id]');
+        if (postLink) {
+            const postId = postLink.getAttribute('data-post-id');
+            if (postId) {
+                logUserVisitedPost(postId);
+            }
+        }
     });
 
 });

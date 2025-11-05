@@ -23,7 +23,9 @@
     "helmet": "^8.1.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
-    "string-strip-html": "^13.5.0"
+    "string-strip-html": "^13.5.0",
+    "youtube-transcript-plus": "^1.1.1",
+    "youtubei.js": "^16.0.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { FilesystemPostRepository } from '../../repositories/postRepository';
 import { FilesystemUserRepository } from '../../repositories/userRepository';
 import { requireLogin } from '../../middlewares/requireLogin';
-import { extractArticleContentFromUrl, summarizeArticleContent, createEmbedding } from '../../services/contentExtractionService';
+import { ingestContent } from '../../services/contentExtractionService';
 import { calculateUserEmbedding } from '../../services/recommendationService';
 import { searchPostsByEmbeddingWithPagination, getFallbackRecommendations } from '../../services/searchService';
 import { Post } from '../../models/posts';
@@ -63,45 +63,6 @@ router.get('/recommendations',
     }
 });
 
-// 게시글 생성
-router.post('/',
-    requireLogin,
-    async (req, res, next) => {
-    try {
-        // 요청 데이터 검증
-        if (!req.body || !req.body.title || !req.body.content) {
-            return res.status(400).json({
-                error: '잘못된 요청입니다.',
-                message: '제목과 내용을 모두 입력해주세요.'
-            });
-        }
-
-        if (!req.user || !('username' in req.user) || req.user.username === undefined || req.user.username === null) {
-            return res.status(400).json({
-                error: '잘못된 요청입니다.',
-                message: '로그인이 필요합니다.'
-            });
-        }
-
-        const postId = String(randomUUID());
-        const post = {
-            id: postId,
-            title: String(req.body.title),
-            timestamp: new Date(),
-            content: String(req.body.content),
-            createdBy: String(req.user.username),
-            summary: null,
-            embedding: null,
-            sourceUrl: null
-        };
-        
-        await postsRepository.createPost(post);
-        res.redirect('/posts');
-    } catch (err) {
-        // 에러를 다음 미들웨어로 전달
-        next(err);
-    }
-});
 
 // URL에서 게시글 생성
 router.post('/from-url',
@@ -126,32 +87,8 @@ router.post('/from-url',
         const createdByUsername = String(req.user.username);
         const sourceUrl = String(req.body.url);
 
-        // 컨텐츠 추출작업 예약
-        extractArticleContentFromUrl(sourceUrl, createdByUsername).then(async (post) => {
-            // 요약과 임베딩을 병렬로 생성한다
-            const [summary, embedding] = await Promise.all([
-                summarizeArticleContent(post.content).catch((err) => {
-                    console.log(err);
-                    return null;
-                }),
-                createEmbedding(post.content).catch((err) => {
-                    console.log(err);
-                    return null;
-                })
-            ]);
-
-            if (summary === null || embedding === null) {
-                throw new Error('요약과 임베딩 생성에 실패했습니다.');
-            }
-
-            // 요약을 포함하여 게시글을 저장한다
-            post.summary = summary;
-            post.embedding = embedding;
-            post.sourceUrl = sourceUrl;
-            await postsRepository.createPost(post);
-        }).catch((err) => {
-            console.log(err);
-        });
+        // ingest 작업 예약
+        ingestContent(sourceUrl, createdByUsername, postsRepository);
 
         // 작업 예약 후 바로 종료
         res.redirect('/posts');

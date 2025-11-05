@@ -93,6 +93,31 @@ class InfiniteScrollFeedController {
             heartIcon.setAttribute('data-post-id', post.id);
         }
 
+        // 아코디언 설정 (summary가 있는 경우)
+        if (post.summary) {
+            const accordionSection = article.querySelector('.accordion-section');
+            const accordionSummary = article.querySelector('.accordion-summary');
+            const viewFullBtn = article.querySelector('.view-full-btn');
+            
+            if (accordionSection) {
+                accordionSection.setAttribute('data-post-id', post.id);
+            }
+            
+            if (accordionSummary) {
+                accordionSummary.textContent = post.summary;
+            }
+            
+            if (viewFullBtn && post.sourceUrl) {
+                viewFullBtn.href = post.sourceUrl;
+            }
+        } else {
+            // summary가 없으면 아코디언 섹션 제거
+            const accordionSection = article.querySelector('.accordion-section');
+            if (accordionSection) {
+                accordionSection.remove();
+            }
+        }
+
         return article;
     }
 
@@ -152,11 +177,29 @@ class InfiniteScrollFeedController {
                 this.loadedPostIds.add(post.id);
             }
         });
+        // scrollTarget을 리스트의 마지막으로 이동
+        this.moveScrollTargetToEnd();
+    }
+
+    moveScrollTargetToEnd() {
+        const scrollTarget = document.querySelector('#scroll-target');
+        if (scrollTarget && this.postsContainer) {
+
+            // 맨 끝으로 이동 (appendChild는 자동으로 이동)
+            this.postsContainer.appendChild(scrollTarget);
+        }
     }
 
     showLoadingIndicator() {
         this.loadingIndicator.style.display = 'block';
-        this.postsContainer.appendChild(this.loadingIndicator);
+        const scrollTarget = document.querySelector('#scroll-target');
+        if (scrollTarget && scrollTarget.parentNode === this.postsContainer) {
+            // scrollTarget 앞에 로딩 인디케이터 삽입
+            this.postsContainer.insertBefore(this.loadingIndicator, scrollTarget);
+        } else {
+            // scrollTarget이 없으면 맨 끝에 추가
+            this.postsContainer.appendChild(this.loadingIndicator);
+        }
     }
 
     hideLoadingIndicator() {
@@ -251,6 +294,21 @@ function deletePost(postId) {
     }
 }
 
+function toggleAccordion(clickedAccordion) {
+    // // 모든 아코디언 섹션을 가져온다
+    // const allAccordions = document.querySelectorAll('.accordion-section');
+    
+    // // 클릭된 아코디언을 제외한 나머지를 모두 닫는다
+    // allAccordions.forEach(accordion => {
+    //     if (accordion !== clickedAccordion) {
+    //         accordion.classList.remove('expanded');
+    //     }
+    // });
+    
+    // 클릭된 아코디언을 토글한다
+    clickedAccordion.classList.toggle('expanded');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     const postsList = document.querySelector('.posts-list');
@@ -263,14 +321,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 무한 스크롤 컨트롤러를 intersection observer에 연결한다.
     const feedController = new InfiniteScrollFeedController();
+    
     const scrollObserver = new IntersectionObserver((entries) => {
-        // entry가 한 개일 때를 가정한다. intersectionRatio가 0보다 작으면 무시한다.
-        if (entries[0].intersectionRatio <= 0) {
-            return;
-        }
-
-        // intersection ratio가 0보다 크면 더 많은 추천 게시글을 불러온다.
-        feedController.loadMorePosts();
+        entries.forEach(entry => {
+            // isIntersecting이 true이고 intersectionRatio가 0보다 크면 트리거
+            if (entry.isIntersecting && entry.intersectionRatio > 0) {
+                feedController.loadMorePosts();
+            }
+        });
     });
     scrollObserver.observe(scrollTarget);
 
@@ -299,6 +357,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-});
+    // 아코디언 토글 이벤트 리스너
+    postsList.addEventListener('click', function(e) {
+        // 클릭된 요소가 accordion-toggle 버튼이거나 그 자식인지 확인
+        const accordionToggle = e.target.closest('.accordion-toggle');
+        if (accordionToggle) {
+            e.preventDefault();
+            const accordionSection = accordionToggle.closest('.accordion-section');
+            if (accordionSection) {
+                toggleAccordion(accordionSection);
+            }
+        }
+    });
 
-s
+});

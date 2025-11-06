@@ -19,6 +19,7 @@ import authApiRouter from './routers/auth/authApiRouter';
 import usersApiRouter from './routers/users/usersApiRouter';
 import postsApiRouter from './routers/posts/postsApiRouter';
 import searchApiRouter from './routers/search/searchApiRouter';
+import { randomUUID } from 'node:crypto';
 
 // 환경변수 불러오기
 dotenv.config();
@@ -86,6 +87,29 @@ passport.use(new LocalStrategy({
         return done(err);
     }
 }));
+
+// passport kakao strategy 설정
+const KAKAO_CALLBACK_URL = process.env.CURRENT_SERVER_ROOT_URL + '/api/auth/kakao/callback';
+passport.use(new KakaoStrategy({
+    clientID: process.env.KAKAO_APP_KEY || '',
+    clientSecret: '', // client secret은 사용하지 않는 것으로 가정한다.
+    callbackURL: KAKAO_CALLBACK_URL
+}, async (accessToken, refreshToken, profile, done) => {
+    try {
+        const user = await usersRepository.getUser(profile.id);
+        if (user) {
+            // 사용자가 있으면 바로 반환
+            return done(null, user);
+        } else {
+            // 사용자가 없으면 새로 생성 후 반환
+            const newUser = await usersRepository.createUser(profile.id, String(randomUUID()));
+            return done(null, newUser);
+        }
+    } catch (err) {
+        return done(err);
+    }
+}));
+
 
 passport.serializeUser((user, done) => {
     if ('username' in user && user.username !== undefined) {

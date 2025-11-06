@@ -2,6 +2,7 @@ import express from 'express';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
+import { Strategy as KakaoStrategy } from 'passport-kakao';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import helmet from 'helmet';

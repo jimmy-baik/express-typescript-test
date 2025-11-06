@@ -294,17 +294,7 @@ function deletePost(postId) {
     }
 }
 
-function toggleAccordion(clickedAccordion) {
-    // // 모든 아코디언 섹션을 가져온다
-    // const allAccordions = document.querySelectorAll('.accordion-section');
-    
-    // // 클릭된 아코디언을 제외한 나머지를 모두 닫는다
-    // allAccordions.forEach(accordion => {
-    //     if (accordion !== clickedAccordion) {
-    //         accordion.classList.remove('expanded');
-    //     }
-    // });
-    
+function toggleAccordion(clickedAccordion) {    
     // 클릭된 아코디언을 토글한다
     clickedAccordion.classList.toggle('expanded');
 }
@@ -329,6 +319,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 feedController.loadMorePosts();
             }
         });
+    },{
+        rootMargin: '0px 0px 50px' // 상, 좌우, 하
     });
     scrollObserver.observe(scrollTarget);
 

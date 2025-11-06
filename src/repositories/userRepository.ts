@@ -33,7 +33,7 @@ export class FilesystemUserRepository {
         }
     }
 
-    async createUser(username: string, password: string): Promise<string> {
+    async createUser(username: string, password: string): Promise<User> {
 
         if (!isAsciiCharactersOnly(username)) {
             throw new Error('Username은 ASCII 문자만 포함할 수 있습니다.');
@@ -58,7 +58,7 @@ export class FilesystemUserRepository {
         const filePath = path.join(this.dataDirectoryPath, fileName);
         const jsonString = JSON.stringify(user);
         await writeFile(filePath, jsonString);
-        return user.username;
+        return user;
     }
     
     async likePost(username: string, postId: string): Promise<string[]> {

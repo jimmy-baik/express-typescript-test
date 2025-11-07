@@ -1,13 +1,12 @@
 import express from 'express';
 import { stripHtml } from "string-strip-html";
-import { FilesystemPostRepository } from '../../repositories/postRepository';
-import { FilesystemUserRepository } from '../../repositories/userRepository';
-import { requireLogin } from '../../middlewares/requireLogin';
-import { createPostEmbedding } from '../../services/contentExtractionService';
-import { calculateUserEmbedding } from '../../services/recommendationService';
-import { searchPosts, searchPostsByEmbedding } from '../../services/searchService';
-import { Post } from '../../models/posts';
-import { User } from '../../models/users';
+import { FilesystemPostRepository } from '@repositories/postRepository';
+import { FilesystemUserRepository } from '@repositories/userRepository';
+import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
+import { createPostEmbedding } from '@services/contentExtractionService';
+import { searchPosts, searchPostsByEmbedding } from '@services/searchService';
+import { Post } from '@models/posts';
+import { User } from '@models/users';
 
 const router = express.Router();
 

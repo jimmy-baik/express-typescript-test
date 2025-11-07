@@ -18,6 +18,8 @@
     "paths": {
       "@repositories/*": ["./src/repositories/*"],
       "@models/*": ["./src/models/*"],
+      "@services/*": ["./src/services/*"],
+      "@adapters/*": ["./src/adapters/*"],
     },
 
 

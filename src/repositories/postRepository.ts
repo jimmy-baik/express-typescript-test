@@ -1,8 +1,7 @@
 import { readFile, readdir, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto'
-import type { Post } from '../models/posts';
-import { opensearchClient, OPENSEARCH_INDEX_NAME } from '../adapters/opensearch';
+import type { Post } from '@models/posts';
+import { opensearchClient, OPENSEARCH_INDEX_NAME } from '@adapters/secondary/opensearch';
 
 export interface IPostRepository {
     getAllPosts(): Promise<Array<Post>|null>;

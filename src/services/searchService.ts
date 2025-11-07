@@ -1,6 +1,5 @@
-import { createPostEmbedding } from "./contentExtractionService";
-import { opensearchClient, OPENSEARCH_INDEX_NAME } from "../adapters/opensearch";
-import { Post } from "../models/posts";
+import { opensearchClient, OPENSEARCH_INDEX_NAME } from '@adapters/secondary/opensearch';
+import { Post } from '@models/posts';
 
 export async function searchPosts(userQuery: string, queryEmbedding: number[], size: number = 5) {
 

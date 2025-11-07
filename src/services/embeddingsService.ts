@@ -1,5 +1,5 @@
-import { User } from '../models/users';
-import { FilesystemPostRepository } from '../repositories/postRepository';
+import { User } from '@models/users';
+import { FilesystemPostRepository } from '@repositories/postRepository';
 
 
 export async function calculateUserEmbedding(user: User, postsRepository: FilesystemPostRepository) : Promise<number[]|null> {

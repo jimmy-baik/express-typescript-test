@@ -6,6 +6,7 @@ import { llmClient, getEmbedding } from '../adapters/llm';
 import { fetchTranscript } from 'youtube-transcript-plus';
 import { TranscriptResponse } from 'youtube-transcript-plus/dist/types';
 import { Innertube } from 'youtubei.js';
+import RSSParser from 'rss-parser';
 
 export async function ingestContent(url:string, createdByUsername:string, postsRepository: FilesystemPostRepository) : Promise<void> {
     
@@ -14,6 +15,8 @@ export async function ingestContent(url:string, createdByUsername:string, postsR
     const videoId = parseYoutubeVideoId(url);
     if (videoId) {
       post = await extractYoutubeTranscript(videoId, createdByUsername);
+    } else if (isRSSUrl(url)) {
+      // TODO: RSS 피드를 추출한다.
     } else {
       post = await extractArticle(url, createdByUsername);
     }
@@ -59,6 +62,26 @@ function parseYoutubeVideoId(url: string): string|null {
     }
   }
   return null;
+}
+
+function isRSSUrl(url: string): boolean {
+  const rssPatterns = [
+    /\.xml$/i,
+    /\/feed\/?$/i,
+    /\/rss\/?$/i,
+    /\/atom\/?$/i,
+    /feed\.xml$/i,
+    /rss\.xml$/i,
+    /atom\.xml$/i
+  ];
+
+  for (const pattern of rssPatterns) {
+    if (pattern.test(url)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 async function extractArticle(url: string, createdByUsername: string): Promise<Post> {

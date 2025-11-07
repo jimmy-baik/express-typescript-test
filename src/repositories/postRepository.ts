@@ -4,10 +4,15 @@ import { randomUUID } from 'node:crypto'
 import type { Post } from '../models/posts';
 import { opensearchClient, OPENSEARCH_INDEX_NAME } from '../adapters/opensearch';
 
+export interface IPostRepository {
+    getAllPosts(): Promise<Array<Post>|null>;
+    getPost(postId: string): Promise<Post|null>;
+    createPost(post: Post): Promise<string>;
+    deletePost(postId: string): Promise<boolean>;
+}
 
 
-
-export class FilesystemPostRepository {
+export class FilesystemPostRepository implements IPostRepository {
     private dataDirectoryPath: string;
 
     constructor(dataDirectoryPath: string) {

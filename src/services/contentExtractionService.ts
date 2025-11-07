@@ -6,42 +6,131 @@ import { llmClient, getEmbedding } from '../adapters/llm';
 import { fetchTranscript } from 'youtube-transcript-plus';
 import { TranscriptResponse } from 'youtube-transcript-plus/dist/types';
 import { Innertube } from 'youtubei.js';
-import RSSParser from 'rss-parser';
+import Parser from 'rss-parser';
 
 export async function ingestContent(url:string, createdByUsername:string, postsRepository: FilesystemPostRepository) : Promise<void> {
     
-  // 컨텐츠 추출작업 수행
-    let post: Post;
-    const videoId = parseYoutubeVideoId(url);
-    if (videoId) {
-      post = await extractYoutubeTranscript(videoId, createdByUsername);
-    } else if (isRSSUrl(url)) {
-      // TODO: RSS 피드를 추출한다.
-    } else {
-      post = await extractArticle(url, createdByUsername);
+  // RSS feed인 경우 feed에 등록된 전체 아티클을 처리하는 함수에 처리를 위임한 후 바로 종료한다.
+  if (isRSSUrl(url)) {
+    await ingestRSSFeedArticles(url, createdByUsername, postsRepository);
+    return;
+  }
+
+  // Feed 가 아니라 개별 컨텐츠인 경우 컨텐츠 종류에 따라 추출 전략을 실행한다.
+  let post: Post;
+  const videoId = parseYoutubeVideoId(url);
+  if (videoId) {
+    post = await extractYoutubeTranscript(videoId, createdByUsername);
+  } else {
+    post = await extractArticle(url, createdByUsername);
+  }
+
+  // 요약과 임베딩을 병렬로 생성한다
+  const [summary, embedding] = await Promise.all([
+      summarizeArticleContent(post.content).catch((err) => {
+          console.log(err);
+          return null;
+      }),
+      createPostEmbedding(post.content).catch((err) => {
+          console.log(err);
+          return null;
+      })
+  ]);
+
+  if (summary === null || embedding === null) {
+      throw new Error('요약과 임베딩 생성에 실패했습니다.');
+  }
+
+  // 요약을 포함하여 게시글을 저장한다
+  post.summary = summary;
+  post.embedding = embedding;
+  post.sourceUrl = url;
+  await postsRepository.createPost(post);
+}
+
+/**
+ * RSS feed에서 모든 아티클을 가져와서 Post로 변환하여 저장한다.
+ * @param feedUrl RSS feed URL
+ * @param createdByUsername 생성자 사용자명
+ * @param postsRepository Post 저장소
+ */
+async function ingestRSSFeedArticles(
+  feedUrl: string,
+  createdByUsername: string,
+  postsRepository: FilesystemPostRepository
+): Promise<void> {
+
+  const parser = new Parser();
+  const feed = await parser.parseURL(feedUrl);
+
+  if (!feed.items || feed.items.length === 0) {
+    console.log('RSS feed에서 아티클을 찾을 수 없습니다.');
+    return;
+  }
+
+  const urlObject = new URL(feedUrl);
+  const rootUrl = urlObject.origin;
+  console.log(`RSS feed 루트 URL: ${rootUrl}`);
+
+  console.log(`RSS feed에서 ${feed.items.length}개의 아티클 발견. 처리를 시작합니다..`);
+  for (const item of feed.items) {
+    if (!item.link) {
+      console.log(`RSS feed 아티클 링크 없음으로 건너뜀: ${item.title}`);
+      continue;
     }
 
-    // 요약과 임베딩을 병렬로 생성한다
-    const [summary, embedding] = await Promise.all([
+    try {
+      let post: Post;
+      const fullyQualifiedSourceUrl = rootUrl + item.link;
+      // feed에서 가져온 메타데이터로 바로 Post 객체를 생성할 수 있다면 바로 변환한다
+      if (item.title && item.pubDate && item.content) {
+        console.log(`RSS feed 아티클 메타데이터로 바로 변환: ${item.title}`);
+        post = {
+          id: String(randomUUID()),
+          title: item.title,
+          timestamp: new Date(item.pubDate!),
+          content: item.content,
+          createdBy: createdByUsername,
+          summary: null,
+          embedding: null,
+          sourceUrl: fullyQualifiedSourceUrl
+        }
+      } else {
+        // 아닌 경우에는 링크에 직접 방문해 아티클을 추출한다.
+        console.log(`RSS feed 아티클 링크에 직접 방문해 아티클 추출: ${item.link}`);
+        post = await extractArticle(fullyQualifiedSourceUrl, createdByUsername);
+      }
+
+      // 요약과 임베딩을 병렬로 생성한다
+      console.log(`RSS feed 아티클 요약과 임베딩 생성 시작: ${item.title}`);
+      const [summary, embedding] = await Promise.all([
         summarizeArticleContent(post.content).catch((err) => {
-            console.log(err);
-            return null;
+          console.log(`요약 생성 실패 (${item.title}):`, err);
+          return null;
         }),
         createPostEmbedding(post.content).catch((err) => {
-            console.log(err);
-            return null;
+          console.log(`임베딩 생성 실패 (${item.title}):`, err);
+          return null;
         })
-    ]);
+      ]);
 
-    if (summary === null || embedding === null) {
-        throw new Error('요약과 임베딩 생성에 실패했습니다.');
+      if (summary === null || embedding === null) {
+        console.log(`요약 또는 임베딩 생성 실패로 건너뜀: ${item.title}`);
+        continue;
+      }
+
+      // 요약과 임베딩을 포함하여 아티클 저장한다
+      post.summary = summary;
+      post.embedding = embedding;
+      post.sourceUrl = fullyQualifiedSourceUrl;
+      await postsRepository.createPost(post);
+      console.log(`RSS feed 아티클 성공적으로 저장됨: ${post.title}`);
+    } catch (error) {
+      // 개별 아티클 실패 시에는 다음 아티클로 계속 진행
+      console.error(`RSS feed 아티클 처리 실패 (${item.title || item.link}):`, error);
+      continue;
     }
-
-    // 요약을 포함하여 게시글을 저장한다
-    post.summary = summary;
-    post.embedding = embedding;
-    post.sourceUrl = url;
-    await postsRepository.createPost(post);
+  }
 }
 
 /**
@@ -129,7 +218,7 @@ async function summarizeArticleContent(content: string): Promise<string> {
 }
 
 
-async function createPostEmbedding(content: string): Promise<number[]> {
+export async function createPostEmbedding(content: string): Promise<number[]> {
   return await getEmbedding(content);
 }
 

@@ -24,6 +24,7 @@
     "passport": "^0.7.0",
     "passport-kakao": "^1.0.1",
     "passport-local": "^1.0.0",
+    "rss-parser": "^3.13.0",
     "string-strip-html": "^13.5.0",
     "youtube-transcript-plus": "^1.1.1",
     "youtubei.js": "^16.0.1"

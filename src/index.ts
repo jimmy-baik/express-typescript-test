@@ -43,7 +43,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 보안 헤더
-app.use(helmet());
+app.use(
+    helmet({
+        strictTransportSecurity: false // Strict-Transport-Security 헤더는 임시로 비활성화한다. (TODO: https 적용 시 활성화 하기)
+    })
+);
 
 // 세션 설정
 const sessionSecretKey = process.env.SESSION_SECRET_KEY;

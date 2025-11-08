@@ -3,9 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>Smallfeed - 우리를 위한 우리만의 피드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/landing-styles.css">
 </head>
 <body>
-    <%= body %>
+    <!-- Navigation -->
+    <nav class="navigation">
+        <div class="nav-content">
+            <a href="/" class="logo">
+                <span>Smallfeed</span>
+            </a>
+            <div class="nav-links">
+                <!-- <a href="#features" class="nav-link">기능</a>
+                <a href="#about" class="nav-link">소개</a> -->
+            </div>
+            <div class="nav-actions">
+                <a href="/login" class="login-link">로그인</a>
+                <a href="/api/auth/kakao" class="start-btn">시작하기</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-section" id="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <span class="highlight">내가 직접 만드는</span> 우리만의 피드
+            </h1>
+            <p class="section-description">
+                왜 개인화된 피드만 있고, "우리가 같이 보는" 피드는 없을까요?<br>
+                낯선 타인의 알고리즘이 아니라, 내가 직접 선별한 피드를 만들어 보세요.<br>
+                내가 추가한 컨텐츠가 모여 우리만의 추천 피드가 됩니다.
+            </p>
+            <div class="hero-cta">
+                <a href="/api/auth/kakao" class="cta-primary">
+                    카카오톡으로 3초만에 시작하기
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use cases -->
+    <section class="usecases-section">
+        <div class="usecases-content">
+            <p class="usecases-text">나와 내 주변의 사람들을 위한 프라이빗 피드를 만들어 보세요.</p>
+            <div class="usecases-logos">
+                <div class="usecases-logo">스터디 모임</div>
+                <div class="usecases-logo">우리 가족</div>
+                <div class="usecases-logo">혼자만의 피드</div>
+                <div class="usecases-logo">회사 동료</div>
+                <div class="usecases-logo">친구들</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section" id="features">
+        <div class="features-content">
+            <div class="section-tag">기능</div>
+            <h2 class="section-title">나와 내 주변 사람만을 위한 프라이빗 피드</h2>
+            <p class="section-description">
+                공통의 관심사가 모여 있는 우리만의 피드를 만들어 보세요.<br>
+                내가 추가한 컨텐츠가 모여 우리만의 추천 피드가 됩니다.
+            </p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">직접 만드는 추천 피드</h3>
+                    <p class="feature-description">
+                        내가 추가한 블로그 글, 뉴스, 동영상이 모여 피드가 만들어져요. 한 번에 하나씩 불러오거나 여러 컨텐츠를 한 번에 불러올 수 있어요.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">우리만의 공유 공간</h3>
+                    <p class="feature-description">
+                        친구, 가족, 그룹원을 초대해서 함께하는 공간을 만들어보세요. 대화 주제를 공유하고 함께 성장할 수 있는 환경을 가꿔 보세요.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">3줄 요약</h3>
+                    <p class="feature-description">
+                        요약을 미리 보고 더 읽어볼지 결정해 보세요.
+                        긴 동영상, 장문의 블로그 글도 3줄로 먼저 요약해 드려요.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path xmlns="http://www.w3.org/2000/svg" d="M5 7H3M5 11H3M20 15H3M15 19H3M21 7H19M21 11H19M10.6 11H13.4C13.9601 11 14.2401 11 14.454 10.891C14.6422 10.7951 14.7951 10.6422 14.891 10.454C15 10.2401 15 9.96005 15 9.4V6.6C15 6.03995 15 5.75992 14.891 5.54601C14.7951 5.35785 14.6422 5.20487 14.454 5.10899C14.2401 5 13.9601 5 13.4 5H10.6C10.0399 5 9.75992 5 9.54601 5.10899C9.35785 5.20487 9.20487 5.35785 9.10899 5.54601C9 5.75992 9 6.03995 9 6.6V9.4C9 9.96005 9 10.2401 9.10899 10.454C9.20487 10.6422 9.35785 10.7951 9.54601 10.891C9.75992 11 10.0399 11 10.6 11Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">공통의 컨텐츠, 나를 위한 추천</h3>
+                    <p class="feature-description">
+                        함께 공유한 컨텐츠를 다시 내 취향에 맞게 정리해 드려요. 비슷하지만 서로 다른 나만의 취향에 맞춰 컨텐츠를 읽어 보세요.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="bottom-cta-section">
+        <div class="bottom-cta-content">
+            <h2 class="bottom-cta-title">
+                <span class="highlight">지금 첫 번째 피드를 만들어 보세요.
+            </h2>
+            <div class="bottom-cta-buttons">
+                <a href="#hero" class="cta-primary">
+                    맨 위로 돌아가기
+                </a>
+                <a href="/api/auth/kakao" class="cta-secondary">
+                    카카오톡으로 바로 시작하기
+                </a>
+            </div>
+        </div>
+    </section>
 </body>
 </html>

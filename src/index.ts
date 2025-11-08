@@ -136,7 +136,7 @@ passport.deserializeUser(async (username: string, done) => {
 
 // 기본 라우트
 app.get('/', (req, res) => {
-    res.redirect('/posts');
+    res.render('index', { title: 'Smallfeed - 내가 직접 만드는 우리만의 피드' });
 });
 
 

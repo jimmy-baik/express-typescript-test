@@ -44,9 +44,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // 보안 헤더
 app.use(helmet());
+
 // 세션 설정
+const sessionSecretKey = process.env.SESSION_SECRET_KEY;
+if (sessionSecretKey === undefined) {
+    throw new Error('SESSION_SECRET_KEY 환경변수가 설정되지 않았습니다. .env 파일에서 설정해주세요.');
+}
 app.use(session({
-    secret: process.env.SESSION_SECRET_KEY || 'placeholder-secret-key',
+    secret: sessionSecretKey,
     resave: false,
     saveUninitialized: false
 }));
@@ -174,7 +179,7 @@ app.use((req: express.Request, res: express.Response) => {
 });
 
 if (process.env.NODE_ENV !== 'test') {
-	app.listen(3002);
+	app.listen(port);
 }
 
 export default app;

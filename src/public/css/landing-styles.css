@@ -287,14 +287,9 @@ body {
 }
 
 .hero-subtitle {
-    font-size: 20px;
+    font-size: 18px;
     color: #6b6b6b;
-    line-height: 1.6;
-    margin-bottom: 40px;
-}
-
-.hero-subtitle p {
-    margin-bottom: 12px;
+    margin-bottom: 30px;
 }
 
 .hero-cta {
@@ -714,7 +709,7 @@ body {
     }
 
     .hero-subtitle {
-        font-size: 18px;
+        font-size: 16px;
     }
 
     .section-title {

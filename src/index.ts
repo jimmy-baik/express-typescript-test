@@ -7,19 +7,20 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import path from 'node:path';
-import { FilesystemUserRepository } from './repositories/userRepository';
-import { initializeOpenSearch } from './adapters/opensearch';
+import { randomUUID } from 'node:crypto';
+
+import { FilesystemUserRepository } from '@repositories/userRepository';
+import { initializeOpenSearch } from '@adapters/secondary/opensearch';
 
 // View 경로 (HTML 웹페이지를 반환)
-import authViewRouter from './routers/auth/authViewRouter';
-import postsViewRouter from './routers/posts/postsViewRouter';
+import authViewRouter from '@adapters/primary/routes/auth/authViewRouter';
+import postsViewRouter from '@adapters/primary/routes/posts/postsViewRouter';
 
 // API 경로 (JSON 응답을 반환)
-import authApiRouter from './routers/auth/authApiRouter';
-import usersApiRouter from './routers/users/usersApiRouter';
-import postsApiRouter from './routers/posts/postsApiRouter';
-import searchApiRouter from './routers/search/searchApiRouter';
-import { randomUUID } from 'node:crypto';
+import authApiRouter from '@adapters/primary/routes/auth/authApiRouter';
+import usersApiRouter from '@adapters/primary/routes/users/usersApiRouter';
+import postsApiRouter from '@adapters/primary/routes/posts/postsApiRouter';
+
 
 // 환경변수 불러오기
 dotenv.config();
@@ -43,9 +44,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // 보안 헤더
 app.use(helmet());
+
 // 세션 설정
+const sessionSecretKey = process.env.SESSION_SECRET_KEY;
+if (sessionSecretKey === undefined) {
+    throw new Error('SESSION_SECRET_KEY 환경변수가 설정되지 않았습니다. .env 파일에서 설정해주세요.');
+}
 app.use(session({
-    secret: process.env.SESSION_SECRET_KEY || 'placeholder-secret-key',
+    secret: sessionSecretKey,
     resave: false,
     saveUninitialized: false
 }));
@@ -143,7 +149,6 @@ app.use('/posts', postsViewRouter);
 app.use('/api/auth', authApiRouter);
 app.use('/api/users', usersApiRouter);
 app.use('/api/posts', postsApiRouter);
-app.use('/api/search', searchApiRouter);
 
 
 // 에러 핸들링
@@ -174,7 +179,7 @@ app.use((req: express.Request, res: express.Response) => {
 });
 
 if (process.env.NODE_ENV !== 'test') {
-	app.listen(3002);
+	app.listen(port);
 }
 
 export default app;

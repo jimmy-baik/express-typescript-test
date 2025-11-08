@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { extract, ArticleData } from '@extractus/article-extractor';
-import { Post } from '../models/posts';
-import { FilesystemPostRepository } from '../repositories/postRepository';
-import { llmClient, getEmbedding } from '../adapters/llm';
+import { Post } from '@models/posts';
+import { FilesystemPostRepository } from '@repositories/postRepository';
+import { llmClient, getEmbedding } from '@adapters/secondary/llm';
 import { fetchTranscript } from 'youtube-transcript-plus';
 import { TranscriptResponse } from 'youtube-transcript-plus/dist/types';
 import { Innertube } from 'youtubei.js';

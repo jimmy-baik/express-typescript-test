@@ -1,5 +1,5 @@
 import express from 'express';
-import { FilesystemUserRepository } from '../../repositories/userRepository';
+import { FilesystemUserRepository } from '@repositories/userRepository';
 
 const router = express.Router();
 

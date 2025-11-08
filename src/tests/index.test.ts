@@ -4,7 +4,7 @@ import express from 'express';
 
 // 인증을 요구하는 미들웨어를 목업한다
 
-jest.mock('../src/middlewares/requireLogin', () => ({
+jest.mock('../adapters/primary/middlewares/requireLogin', () => ({
     requireLogin: jest.fn(), // 모듈 내의 함수를 목업으로 대체
 }));
 const mockRequireLogin = require('../src/middlewares/requireLogin').requireLogin; // 이 시점에서 불러온 함수는 목업된 함수

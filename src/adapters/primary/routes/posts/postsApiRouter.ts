@@ -1,13 +1,13 @@
 import express from 'express';
 import { randomUUID } from 'node:crypto';
-import { FilesystemPostRepository } from '../../repositories/postRepository';
-import { FilesystemUserRepository } from '../../repositories/userRepository';
-import { requireLogin } from '../../middlewares/requireLogin';
-import { ingestContent } from '../../services/contentExtractionService';
-import { calculateUserEmbedding } from '../../services/recommendationService';
-import { searchPostsByEmbeddingWithPagination, getFallbackRecommendations } from '../../services/searchService';
-import { Post } from '../../models/posts';
-import { User } from '../../models/users';
+import { FilesystemPostRepository } from '@repositories/postRepository';
+import { FilesystemUserRepository } from '@repositories/userRepository';
+import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
+import { ingestContent } from '@services/contentExtractionService';
+import { calculateUserEmbedding } from '@services/embeddingsService';
+import { searchPostsByEmbeddingWithPagination, getFallbackRecommendations } from '@services/searchService';
+import { Post } from '@models/posts';
+import { User } from '@models/users';
 import { stripHtml } from "string-strip-html";
 
 const router = express.Router();

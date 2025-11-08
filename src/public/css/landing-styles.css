@@ -107,15 +107,159 @@ body {
 
 /* Hero Section */
 .hero-section {
-    padding: 25vh 5vw 5vh;
+    padding: 35vh 5vw 2vh;
     background-color: #f8f8f8;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.feed-tiles-container {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.feed-tiles-row {
+    display: flex;
+    gap: 20px;
+    width: max-content;
+    animation: slideLeft 30s linear infinite;
+}
+
+.feed-tiles-row-1 {
+    animation-duration: 30s;
+}
+
+.feed-tiles-row-2 {
+    animation-duration: 35s;
+    animation-direction: reverse;
+    margin-left: -200px;
+}
+
+.feed-tiles-row-3 {
+    animation-duration: 40s;
+    margin-left: -400px;
+}
+
+@keyframes slideLeft {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.feed-tile {
+    width: 280px;
+    height: 180px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    position: relative;
+    backdrop-filter: blur(2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Skeleton lines inside tiles */
+.skeleton-line {
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 4px;
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+.skeleton-title {
+    height: 14px;
+    width: 70%;
+}
+
+.skeleton-text {
+    height: 10px;
+    width: 100%;
+}
+
+.skeleton-text.short {
+    width: 60%;
+}
+
+/* Stagger animation delays for different tiles */
+.feed-tile:nth-child(1) .skeleton-line {
+    animation-delay: 0s;
+}
+
+.feed-tile:nth-child(2) .skeleton-line {
+    animation-delay: 0.2s;
+}
+
+.feed-tile:nth-child(3) .skeleton-line {
+    animation-delay: 0.4s;
+}
+
+.feed-tile:nth-child(4) .skeleton-line {
+    animation-delay: 0.6s;
+}
+
+.feed-tile:nth-child(5) .skeleton-line {
+    animation-delay: 0.8s;
+}
+
+.feed-tile:nth-child(6) .skeleton-line {
+    animation-delay: 1s;
+}
+
+.feed-tile:nth-child(7) .skeleton-line {
+    animation-delay: 1.2s;
+}
+
+.feed-tile:nth-child(8) .skeleton-line {
+    animation-delay: 1.4s;
+}
+
+/* Vary tile backgrounds for visual interest */
+.feed-tiles-row .feed-tile:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.feed-tiles-row .feed-tile:nth-child(even) {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+@keyframes shimmer {
+    0%, 100% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.7;
+    }
 }
 
 .hero-content {
     max-width: 800px;
     margin: 0 auto;
     position: relative;
+    top: -8vh;
+    z-index: 1;
 }
 
 .hero-title {
@@ -199,17 +343,18 @@ body {
 
 /* Use cases Section */
 .usecases-section {
-    padding: 60px 20px;
+    padding: 40px 20px;
     background-color: #f8f8f8;
     text-align: center;
 }
 
 .usecases-content {
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 10vh auto 5vh;
 }
 
 .usecases-text {
+    text-align: center;
     font-size: 14px;
     color: #6b6b6b;
     margin-bottom: 32px;
@@ -221,7 +366,7 @@ body {
     align-items: center;
     gap: 48px;
     flex-wrap: wrap;
-    opacity: 0.6;
+    opacity: 0.8;
 }
 
 .usecases-logo {
@@ -586,5 +731,20 @@ body {
 
     .features-grid {
         grid-template-columns: 1fr;
+    }
+
+    /* Reduce feed tiles visibility on mobile */
+    .feed-tile {
+        width: 200px;
+        height: 140px;
+        opacity: 0.3;
+    }
+
+    .feed-tiles-container {
+        gap: 16px;
+    }
+
+    .feed-tiles-row {
+        gap: 12px;
     }
 }

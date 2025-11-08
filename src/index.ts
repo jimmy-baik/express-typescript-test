@@ -45,6 +45,11 @@ app.use(express.urlencoded({ extended: true }));
 // 보안 헤더
 app.use(
     helmet({
+        contentSecurityPolicy: { // CSP의 upgrade-insecure-requests 옵션은 임시로 비활성화 (TODO: https 적용 시 활성화 하기)
+            directives: {
+              "upgrade-insecure-requests" : null
+            },
+          },
         strictTransportSecurity: false // Strict-Transport-Security 헤더는 임시로 비활성화한다. (TODO: https 적용 시 활성화 하기)
     })
 );

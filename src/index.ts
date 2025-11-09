@@ -43,7 +43,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 보안 헤더
-app.use(helmet());
+app.use(
+    helmet({
+        contentSecurityPolicy: { // CSP의 upgrade-insecure-requests 옵션은 임시로 비활성화 (TODO: https 적용 시 활성화 하기)
+            directives: {
+              "upgrade-insecure-requests" : null
+            },
+          },
+        strictTransportSecurity: false // Strict-Transport-Security 헤더는 임시로 비활성화한다. (TODO: https 적용 시 활성화 하기)
+    })
+);
 
 // 세션 설정
 const sessionSecretKey = process.env.SESSION_SECRET_KEY;
@@ -136,7 +145,7 @@ passport.deserializeUser(async (username: string, done) => {
 
 // 기본 라우트
 app.get('/', (req, res) => {
-    res.redirect('/posts');
+    res.render('index', { title: 'Smallfeed - 내가 직접 만드는 우리만의 피드' });
 });
 
 

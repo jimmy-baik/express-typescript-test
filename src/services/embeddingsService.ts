@@ -4,20 +4,20 @@ import { FilesystemPostRepository } from '@repositories/postRepository';
 
 export async function calculateUserEmbedding(user: User, postsRepository: FilesystemPostRepository) : Promise<number[]|null> {
 
-    if (user.viewedPosts.length === 0 && user.likedPosts.length === 0) {
+    if (user.viewedPostsId.length === 0 && user.likedPostsId.length === 0) {
         return null;
     }
 
     // 사용자가 조회한 게시물과 좋아요를 누른 게시물의 embedding을 모두 가져온다.
     const [viewedPostsEmbeddings, likedPostsEmbeddings] = await Promise.all([
-        Promise.all(user.viewedPosts.map(async (postId) => {
+        Promise.all(user.viewedPostsId.map(async (postId) => {
             const post = await postsRepository.getPost(postId);
             if (!post) {
                 return null;
             }
             return post.embedding;
         })),
-        Promise.all(user.likedPosts.map(async (postId) => {
+        Promise.all(user.likedPostsId.map(async (postId) => {
             const post = await postsRepository.getPost(postId);
             if (!post) {
                 return null;

@@ -23,8 +23,8 @@ export class FilesystemUserRepository {
             return {
                 username: jsonData.username,
                 hashedPassword: jsonData.hashedPassword,
-                likedPosts: jsonData.likedPosts,
-                viewedPosts: jsonData.viewedPosts,
+                likedPostsId: jsonData.likedPosts,
+                viewedPostsId: jsonData.viewedPosts,
                 userEmbedding: jsonData.userEmbedding
             }
         } catch (err) {
@@ -66,12 +66,12 @@ export class FilesystemUserRepository {
         if (!user) {
             throw new Error('사용자를 찾을 수 없습니다.');
         }
-        user.likedPosts.push(postId);
+        user.likedPostsId.push(postId);
         const fileName = user.username + '.json';
         const filePath = path.join(this.dataDirectoryPath, fileName);
         const jsonString = JSON.stringify(user);
         await writeFile(filePath, jsonString);
-        return user.likedPosts;
+        return user.likedPostsId;
     }
 
     async viewPost(username: string, postId: string): Promise<string[]> {
@@ -79,12 +79,12 @@ export class FilesystemUserRepository {
         if (!user) {
             throw new Error('사용자를 찾을 수 없습니다.');
         }
-        user.viewedPosts.push(postId);
+        user.viewedPostsId.push(postId);
         const fileName = user.username + '.json';
         const filePath = path.join(this.dataDirectoryPath, fileName);
         const jsonString = JSON.stringify(user);
         await writeFile(filePath, jsonString);
-        return user.viewedPosts;
+        return user.viewedPostsId;
     }
 
     async updateUserEmbedding(username: string, embedding: number[]): Promise<number[]> {

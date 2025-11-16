@@ -43,7 +43,7 @@ router.get('/',
             return post;
           });
 
-          res.render('posts', {title: '게시글 목록', posts: htmlStrippedPosts, userLikedPosts: (req.user as User)?.likedPosts || []});
+          res.render('posts', {title: '게시글 목록', posts: htmlStrippedPosts, userLikedPosts: (req.user as User)?.likedPostsId || []});
 
         }
     catch (err) {

@@ -156,7 +156,7 @@ router.post('/:postId/like',
         }
         // 내역을 사용자 프로필에 저장한다.
         const likedPosts = await usersRepository.likePost(username, postId);
-        (user as User).likedPosts = likedPosts;
+        (user as User).likedPostsId = likedPosts;
 
         // user embedding 계산 작업을 에약한다.
         calculateUserEmbedding(user as User, postsRepository).then( async (userEmbedding) => {
@@ -193,7 +193,7 @@ router.post('/:postId/viewed',
             });
         }
         const viewedPosts = await usersRepository.viewPost(username, postId);
-        (user as User).viewedPosts = viewedPosts;
+        (user as User).viewedPostsId = viewedPosts;
 
         // user embedding 계산 작업을 에약한다.
         calculateUserEmbedding(user as User, postsRepository).then( async (userEmbedding) => {

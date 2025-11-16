@@ -20,6 +20,7 @@
       "@models/*": ["./src/models/*"],
       "@services/*": ["./src/services/*"],
       "@adapters/*": ["./src/adapters/*"],
+      "@system/*": ["./src/system/*"],
     },
 
 

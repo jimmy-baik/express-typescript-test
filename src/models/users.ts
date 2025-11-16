@@ -1,8 +1,8 @@
 export interface User {
     userId: number
     username: string
-    fullname: string
     hashedPassword: string
+    fullname: string | null
     createdAt: Date
     userEmbedding: number[] | null
 }
@@ -10,4 +10,9 @@ export interface User {
 export interface UserInteractionHistory {
     likedPostIds: number[]
     viewedPostIds: number[]
+}
+
+export enum UserInteractionType {
+    LIKE = 'LIKE',
+    VIEW = 'VIEW',
 }

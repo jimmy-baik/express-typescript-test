@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "fbe231c3-7a5f-4b69-bb56-59971242cb3d",
+  "id": "ff68f48c-78bc-4106-b49d-e1d2d932aaa4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "feed_ingestion_sources": {
@@ -159,6 +159,13 @@
         },
         "owner_user_id": {
           "name": "owner_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "submitted_at": {
+          "name": "submitted_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -472,16 +479,23 @@
           "notNull": true,
           "autoincrement": false
         },
-        "fullname": {
-          "name": "fullname",
+        "hashed_password": {
+          "name": "hashed_password",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "hashed_password": {
-          "name": "hashed_password",
+        "fullname": {
+          "name": "fullname",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

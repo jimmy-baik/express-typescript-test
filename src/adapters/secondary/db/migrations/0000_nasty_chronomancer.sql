@@ -20,6 +20,7 @@ CREATE TABLE `feed_posts` (
 	`feed_id` integer NOT NULL,
 	`post_id` integer NOT NULL,
 	`owner_user_id` integer NOT NULL,
+	`submitted_at` integer NOT NULL,
 	FOREIGN KEY (`feed_id`) REFERENCES `feeds`(`feed_id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`post_id`) REFERENCES `posts`(`post_id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`owner_user_id`) REFERENCES `users`(`user_id`) ON UPDATE no action ON DELETE no action
@@ -66,8 +67,9 @@ CREATE TABLE `user_post_interactions` (
 CREATE TABLE `users` (
 	`user_id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`username` text NOT NULL,
-	`fullname` text NOT NULL,
 	`hashed_password` text NOT NULL,
+	`fullname` text,
+	`created_at` integer NOT NULL,
 	`user_embedding` text
 );
 --> statement-breakpoint

@@ -61,19 +61,23 @@ export class SQLiteUserRepository implements IUserRepository {
     }
 
     async likePost(userId: number, postId: number): Promise<number> {
+        const createdAt = getUnixTimestamp();
         const like = await this.db.insert(userPostInteractionsTable).values({
             userId,
             postId,
             interactionType: UserInteractionType.LIKE,
+            createdAt
         }).returning().get();
         return like.id;
     }
 
     async viewPost(userId: number, postId: number): Promise<number> {
+        const createdAt = getUnixTimestamp();
         const view = await this.db.insert(userPostInteractionsTable).values({
             userId,
             postId,
             interactionType: UserInteractionType.VIEW,
+            createdAt
         }).returning().get();
         return view.id;
     }

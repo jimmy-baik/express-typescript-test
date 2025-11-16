@@ -6,23 +6,12 @@ import { usersTable, userPostInteractionsTable } from '@adapters/secondary/db/sc
 import { eq } from 'drizzle-orm';
 import { getUnixTimestamp } from '@system/timezone';
 
-export interface IUserRepository {
-    getUser(userId: number): Promise<User|null>;
-    createUser(username: string, password: string, fullname: string | null): Promise<User>;
-    likePost(userId: number, postId: number): Promise<number>;
-    viewPost(userId: number, postId: number): Promise<number>;
-    updateUserEmbedding(userId: number, embedding: number[]): Promise<void>;
-}
 
-function isAsciiCharactersOnly(str: string): boolean {
-    return /^[\x00-\x7F]*$/.test(str);
-}
-
-export class SQLiteUserRepository implements IUserRepository {
+export class UserRepository {
     private db: typeof db;
 
-    constructor() {
-        this.db = db;
+    constructor(dbClient: typeof db) {
+        this.db = dbClient;
     }
 
     async getUser(userId: number): Promise<User|null> {
@@ -30,14 +19,15 @@ export class SQLiteUserRepository implements IUserRepository {
         if (user === undefined) {
             return null;
         }
-        return {
-            userId: user.userId,
-            username: user.username,
-            fullname: user.fullname ?? '',
-            hashedPassword: user.hashedPassword,
-            createdAt: new Date(user.createdAt),
-            userEmbedding: user.userEmbedding ? JSON.parse(user.userEmbedding) : null,
-        };
+        return this.toDomainUser(user);
+    }
+
+    async getUserByUsername(username: string): Promise<User|null> {
+        const user = await this.db.select().from(usersTable).where(eq(usersTable.username, username)).limit(1).get();
+        if (user === undefined) {
+            return null;
+        }
+        return this.toDomainUser(user);
     }
 
     async createUser(username: string, password: string, fullname: string | null): Promise<User> {
@@ -50,14 +40,7 @@ export class SQLiteUserRepository implements IUserRepository {
             createdAt,
         }).returning().get();
 
-        return {
-            userId: newUser.userId,
-            username: newUser.username,
-            fullname: newUser.fullname ?? '',
-            hashedPassword: newUser.hashedPassword,
-            createdAt: new Date(newUser.createdAt),
-            userEmbedding: newUser.userEmbedding ? JSON.parse(newUser.userEmbedding) : null,
-        };
+        return this.toDomainUser(newUser);
     }
 
     async likePost(userId: number, postId: number): Promise<number> {
@@ -90,6 +73,17 @@ export class SQLiteUserRepository implements IUserRepository {
         if (updatedUserResult.rowsAffected < 1) {
             throw new Error('user embedding 업데이트 실패');
         }
+    }
+
+    private toDomainUser(user: typeof usersTable.$inferSelect): User {
+        return {
+            userId: user.userId,
+            username: user.username,
+            fullname: user.fullname,
+            hashedPassword: user.hashedPassword,
+            createdAt: new Date(user.createdAt),
+            userEmbedding: user.userEmbedding ? JSON.parse(user.userEmbedding) : null,
+        };
     }
 
 }

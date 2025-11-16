@@ -77,10 +77,7 @@ export class UserRepository {
 
     private toDomainUser(user: typeof usersTable.$inferSelect): User {
         return {
-            userId: user.userId,
-            username: user.username,
-            fullname: user.fullname,
-            hashedPassword: user.hashedPassword,
+            ...user,
             createdAt: new Date(user.createdAt),
             userEmbedding: user.userEmbedding ? JSON.parse(user.userEmbedding) : null,
         };

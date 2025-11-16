@@ -11,3 +11,7 @@ export function KstToUtc(kstDate: Date): Date {
 export function getUnixTimestamp(): number {
     return Math.floor(Date.now() / 1000);
 }
+
+export function dateToUnixTimestamp(date: Date): number {
+    return Math.floor(date.getTime() / 1000);
+}

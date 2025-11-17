@@ -3,7 +3,7 @@ import { opensearchClient, OPENSEARCH_INDEX_NAME } from '@adapters/secondary/ope
 import db from '@adapters/secondary/db/client';
 import { postsTable, feedPostsTable } from '@adapters/secondary/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { dateToUnixTimestamp } from '@system/timezone';
+import { dateToUnixTimestamp, unixTimestampToDate } from '@system/timezone';
 
 export class PostRepository {
     private db: typeof db;
@@ -49,7 +49,7 @@ export class PostRepository {
     private toDomainPost(post: typeof postsTable.$inferSelect): Post {
         return {
             ...post,
-            createdAt: new Date(post.createdAt),
+            createdAt: unixTimestampToDate(post.createdAt),
             embedding: post.embedding ? JSON.parse(post.embedding) : null
         };
     }
@@ -66,8 +66,8 @@ export class PostRepository {
         return {
             ...feedPostRelationship,
             ...post,
-            createdAt: new Date(post.createdAt),
-            submittedAt: new Date(feedPostRelationship.submittedAt),
+            createdAt: unixTimestampToDate(post.createdAt),
+            submittedAt: unixTimestampToDate(feedPostRelationship.submittedAt),
             embedding: post.embedding ? JSON.parse(post.embedding) : null
         };
     }

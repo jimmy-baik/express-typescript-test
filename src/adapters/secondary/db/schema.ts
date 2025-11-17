@@ -36,7 +36,7 @@ export const ingestionSourcesTable = sqliteTable("ingestion_sources", {
 });
 
 // 다대다 mapping 테이블
-export const feedMembers = sqliteTable("feed_members", {
+export const feedMembersTable = sqliteTable("feed_members", {
     feedId: int('feed_id').primaryKey().references(() => feedsTable.feedId),
     userId: int('user_id').primaryKey().references(() => usersTable.userId),
 });

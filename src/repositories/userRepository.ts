@@ -4,7 +4,7 @@ import { UserInteractionType } from '@models/users';
 import db from '@adapters/secondary/db/client';
 import { usersTable, userPostInteractionsTable } from '@adapters/secondary/db/schema';
 import { eq } from 'drizzle-orm';
-import { getUnixTimestamp } from '@system/timezone';
+import { getUnixTimestamp, unixTimestampToDate } from '@system/timezone';
 
 
 export class UserRepository {
@@ -78,7 +78,7 @@ export class UserRepository {
     private toDomainUser(user: typeof usersTable.$inferSelect): User {
         return {
             ...user,
-            createdAt: new Date(user.createdAt),
+            createdAt: unixTimestampToDate(user.createdAt),
             userEmbedding: user.userEmbedding ? JSON.parse(user.userEmbedding) : null,
         };
     }

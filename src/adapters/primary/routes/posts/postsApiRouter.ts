@@ -35,7 +35,7 @@ router.post('/:postId/like',
             });
         }
         const username = String(user.username);
-        const post = await postsRepository.getPost(postId);
+        const post = await postsRepository.getPostByPostId(postId);
         if (!post) {
             return res.status(400).json({
                 error: '잘못된 요청입니다.',
@@ -73,7 +73,7 @@ router.post('/:postId/viewed',
             });
         }
         const username = String(user.username);
-        const post = await postsRepository.getPost(postId);
+        const post = await postsRepository.getPostByPostId(postId);
         if (!post) {
             return res.status(400).json({
                 error: '잘못된 요청입니다.',

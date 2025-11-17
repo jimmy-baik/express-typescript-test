@@ -7,15 +7,20 @@ import { dateToUnixTimestamp, getUnixTimestamp, unixTimestampToDate } from '@sys
 
 export class PostRepository {
     private db: typeof db;
-    private indexer: typeof opensearchClient;
+    private searchEngine: typeof opensearchClient;
 
-    constructor(dbClient: typeof db, searchIndexerClient: typeof opensearchClient) {
+    constructor(dbClient: typeof db, searchEngineClient: typeof opensearchClient) {
         this.db = dbClient;
-        this.indexer = searchIndexerClient;
+        this.searchEngine = searchEngineClient;
     }
 
     async getPostByOriginalUrl(originalUrl: string): Promise<Post|null> {
         const post = await this.db.select().from(postsTable).where(eq(postsTable.originalUrl, originalUrl)).limit(1).get();
+        return post ? this.toDomainPost(post) : null;
+    }
+
+    async getPostByPostId(postId: number): Promise<Post|null> {
+        const post = await this.db.select().from(postsTable).where(eq(postsTable.postId, postId)).limit(1).get();
         return post ? this.toDomainPost(post) : null;
     }
 
@@ -54,11 +59,31 @@ export class PostRepository {
     }
 
     async createFeedToPostRelationship(feedId: number, postId:number, ownerUserId:number): Promise<void> {
+
+
+        const submittedAt = new Date();
         await this.db.insert(feedPostsTable).values({
             feedId: feedId,
             postId: postId,
             ownerUserId: ownerUserId,
-            submittedAt: getUnixTimestamp(),
+            submittedAt: dateToUnixTimestamp(submittedAt),
+        });
+
+        const post = await this.getPostByPostId(postId);
+        if (!post) {
+            throw new Error('게시글을 찾을 수 없습니다.');
+        }
+
+        const searchDocument = {
+            ...post,
+            feedId: feedId,
+            submittedAt: dateToUnixTimestamp(submittedAt),
+            ownerUserId: ownerUserId,
+        }
+
+        await this.searchEngine.index({
+            index: OPENSEARCH_INDEX_NAME,
+            body: searchDocument
         });
     }
 

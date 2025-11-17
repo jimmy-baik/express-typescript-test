@@ -42,29 +42,9 @@ export async function searchPosts(userQuery: string, queryEmbedding: number[], s
 }
 
 
-export async function searchPostsByEmbedding(embedding: number[], size: number = 5) {
-    const opensearchResponse = await opensearchClient.search({
-        index: OPENSEARCH_INDEX_NAME,
-        body: {
-            size: size,
-            query: {
-                knn: {
-                    embedding: {
-                        vector: embedding,
-                        k: 50
-                    }
-                }
-            }
-        }
-    });
-
-    return filterUniqueSearchResults(opensearchResponse);
-
-}
-
-export async function searchPostsByEmbeddingWithPagination(
+export async function searchPostsInFeedByEmbedding(
     embedding: number[], 
-    page: number = 1, 
+    feedId: number,
     limit: number = 5,
     excludeIds: string[] = []
 ) {
@@ -86,10 +66,17 @@ export async function searchPostsByEmbeddingWithPagination(
                             }
                         }
                     ],
+                    filter: [
+                        {
+                            term: {
+                                feedId: feedId
+                            }
+                        }
+                    ],
                     must_not: excludeIds.length > 0 ? [
                         {
                             terms: {
-                                id: excludeIds
+                                postId: excludeIds
                             }
                         }
                     ] : []
@@ -111,10 +98,17 @@ export async function searchPostsByEmbeddingWithPagination(
                             }
                         }
                     ],
+                    filter: [
+                        {
+                            term: {
+                                feedId: feedId
+                            }
+                        }
+                    ],
                     must_not: excludeIds.length > 0 ? [
                         {
                             terms: {
-                                id: excludeIds
+                                postId: excludeIds
                             }
                         }
                     ] : []
@@ -136,10 +130,17 @@ export async function searchPostsByEmbeddingWithPagination(
                             }
                         }
                     ],
+                    filter: [
+                        {
+                            term: {
+                                feedId: feedId
+                            }
+                        }
+                    ],
                     must_not: excludeIds.length > 0 ? [
                         {
                             terms: {
-                                id: excludeIds
+                                postId: excludeIds
                             }
                         }
                     ] : []
@@ -162,17 +163,24 @@ export async function searchPostsByEmbeddingWithPagination(
                         },
                         {
                             range: {
-                                timestamp: {
+                                submittedAt: {
                                     gte: "now-7d" // 최근 7일 이내의 게시글
                                 }
                             }
                         }
                     ],
                     minimum_should_match: 1,
+                    filter: [
+                        {
+                            term: {
+                                feedId: feedId
+                            }
+                        }
+                    ],
                     must_not: excludeIds.length > 0 ? [
                         {
                             terms: {
-                                id: excludeIds
+                                postId: excludeIds
                             }
                         }
                     ] : []
@@ -189,10 +197,17 @@ export async function searchPostsByEmbeddingWithPagination(
                             match_all: {}
                         }
                     ],
+                    filter: [
+                        {
+                            term: {
+                                feedId: feedId
+                            }
+                        }
+                    ],
                     must_not: excludeIds.length > 0 ? [
                         {
                             terms: {
-                                id: excludeIds
+                                postId: excludeIds
                             }
                         }
                     ] : []
@@ -209,7 +224,7 @@ export async function searchPostsByEmbeddingWithPagination(
                 body: {
                     size: limit,
                     query: strategy.query,
-                    _source: ['id', 'timestamp', 'title', 'summary', 'content', 'createdBy', 'sourceUrl']
+                    _source: ['postId', 'submittedAt', 'originalUrl', 'textContent', 'title', 'generatedSummary']
                 }
             });
 
@@ -233,17 +248,15 @@ export async function searchPostsByEmbeddingWithPagination(
 
 // 유저 임베딩이 없거나 모든 검색 전략이 실패할 경우 사용
 export async function getFallbackRecommendations(
-    page: number = 1, 
+    feedId: number,
     limit: number = 5,
     excludeIds: string[] = []
 ) {
-    const from = (page - 1) * limit;
-    
+
     const opensearchResponse = await opensearchClient.search({
         index: OPENSEARCH_INDEX_NAME,
         body: {
             size: limit,
-            from: from,
             query: {
                 bool: {
                     must: [
@@ -251,19 +264,23 @@ export async function getFallbackRecommendations(
                             match_all: {}
                         }
                     ],
+                    filter: [
+                        {
+                            term: {
+                                feedId: feedId
+                            }
+                        }
+                    ],
                     must_not: excludeIds.length > 0 ? [
                         {
                             terms: {
-                                id: excludeIds
+                                postId: excludeIds
                             }
                         }
                     ] : []
                 }
             },
-            sort: [
-                { timestamp: { order: "desc" } } // 제일 최근부터 불러온다
-            ],
-            _source: ['id', 'timestamp', 'title', 'summary', 'content', 'createdBy', 'sourceUrl']
+            _source: ['postId', 'submittedAt', 'originalUrl', 'textContent', 'title', 'generatedSummary']
         }
     });
 
@@ -274,19 +291,19 @@ function filterUniqueSearchResults(opensearchResponse: any) : Post[] {
     const searchResults: Post[] = (opensearchResponse.body.hits?.hits || [])
       .sort((a: any, b: any) => b._score - a._score)
       .map((h: any) => ({
-        id: h._source.id,
+        postId: h._source.postId,
+        createdAt: h._source.createdAt,
+        originalUrl: h._source.originalUrl,
+        textContent: h._source.textContent,
+        htmlContent: null,
         title: h._source.title,
-        summary: h._source.summary,
-        content: h._source.content,
-        createdBy: h._source.createdBy,
-        timestamp: h._source.timestamp,
-        embedding: null,
-        sourceUrl: h._source.sourceUrl
+        generatedSummary: h._source.generatedSummary,
+        embedding: null
     }));
 
     // 결과 반환 전 중복 제거
     const uniqueResults = searchResults.filter((post, index, self) => 
-        index === self.findIndex(p => p.id === post.id)
+        index === self.findIndex(p => p.postId === post.postId)
     );
 
     return uniqueResults;

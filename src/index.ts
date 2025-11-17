@@ -8,8 +8,8 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-
-import { FilesystemUserRepository } from '@repositories/userRepository';
+import db from '@adapters/secondary/db/client';
+import { UserRepository } from '@repositories/userRepository';
 import { initializeOpenSearch } from '@adapters/secondary/opensearch';
 
 // View 경로 (HTML 웹페이지를 반환)
@@ -71,8 +71,7 @@ initializeOpenSearch().catch((err) => {
 });
 
 // 유저 Repository 설정
-const usersDirectory = './src/data/users';
-const usersRepository = new FilesystemUserRepository(usersDirectory);
+const usersRepository = new UserRepository(db);
 
 
 // passport 설정
@@ -86,7 +85,7 @@ passport.use(new LocalStrategy({
 }, async (username, password, done) => { // verify 함수
     try {
 
-        const user = await usersRepository.getUser(username);
+        const user = await usersRepository.getUserByUsername(username);
         if (!user) {
             return done(null, false);
         }
@@ -111,13 +110,13 @@ passport.use(new KakaoStrategy({
     callbackURL: KAKAO_CALLBACK_URL
 }, async (accessToken, refreshToken, profile, done) => {
     try {
-        const user = await usersRepository.getUser(profile.id);
+        const user = await usersRepository.getUserByUsername(profile.id);
         if (user) {
             // 사용자가 있으면 바로 반환
             return done(null, user);
         } else {
             // 사용자가 없으면 새로 생성 후 반환
-            const newUser = await usersRepository.createUser(profile.id, String(randomUUID()));
+            const newUser = await usersRepository.createUser(profile.id, String(randomUUID()), null);
             return done(null, newUser);
         }
     } catch (err) {
@@ -127,16 +126,20 @@ passport.use(new KakaoStrategy({
 
 
 passport.serializeUser((user, done) => {
-    if ('username' in user && user.username !== undefined) {
-        done(null, user.username);
+    if ('userId' in user && user.userId !== undefined) {
+        done(null, user.userId);
     } else {
         done(new Error('정상적인 User 객체가 아닙니다.'));
     }
 });
 
-passport.deserializeUser(async (username: string, done) => {
+passport.deserializeUser(async (userId: number, done) => {
     try {
-        const user = await usersRepository.getUser(username);
+        const user = await usersRepository.getUser(userId);
+        if (!user) {
+            throw new Error('사용자를 찾을 수 없습니다.');
+        }
+
         done(null, user);
     } catch (err) {
         done(err);

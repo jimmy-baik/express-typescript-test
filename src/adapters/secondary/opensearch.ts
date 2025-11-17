@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const OPENSEARCH_INDEX_NAME = "posts";
+export const OPENSEARCH_INDEX_NAME = "feed_posts";
 const EMBEDDING_DIMENSION = 768;
 export const opensearchClient = new Client({
   node: "http://localhost:9200",
@@ -24,27 +24,33 @@ export async function initializeOpenSearch() {
     body: {
       mappings: {
         properties: {
-          id: {
-            type: "keyword"
+          feedId: {
+            type: "integer"
           },
-          timestamp: {
+          postId: {
+            type: "integer"
+          },
+          createdAt: {
+            type: "date"
+          },
+          ownerUserId: {
+            type: "integer"
+          },
+          submittedAt: {
             type: "date"
           },
           title: {
             type: "text",
             analyzer: "standard"
           },
-          content: {
+          textContent: {
             type: "text",
             analyzer: "standard"
           },
-          sourceUrl: {
+          originalUrl: {
             type: "keyword"
           },
-          createdBy: {
-            type: "keyword"
-          },
-          summary: {
+          generatedSummary: {
             type: "text",
             analyzer: "standard"
           },

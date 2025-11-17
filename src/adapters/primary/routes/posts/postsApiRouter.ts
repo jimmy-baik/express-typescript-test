@@ -7,7 +7,7 @@ import { opensearchClient } from '@adapters/secondary/opensearch';
 import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
 import { ingestContent } from '@services/contentExtractionService';
 import { calculateUserEmbedding } from '@services/embeddingsService';
-import { searchPostsByEmbeddingWithPagination, getFallbackRecommendations } from '@services/searchService';
+import { searchPostsInFeedByEmbedding, getFallbackRecommendations } from '@services/searchService';
 import { Post } from '@models/posts';
 import { User } from '@models/users';
 import { stripHtml } from "string-strip-html";

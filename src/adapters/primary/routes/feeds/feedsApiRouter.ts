@@ -5,9 +5,9 @@ import db from '@adapters/secondary/db/client';
 import { opensearchClient } from '@adapters/secondary/opensearch';
 import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
 import { User } from '@models/users';
-import { Post } from '@models/posts';
+import { Post, FeedPost } from '@models/posts';
 import { ingestContent } from '@services/contentExtractionService';
-import { searchPostsByEmbeddingWithPagination, getFallbackRecommendations } from '@services/searchService';
+import { searchPostsInFeedByEmbedding, getFallbackRecommendations } from '@services/searchService';
 
 
 
@@ -76,10 +76,10 @@ router.get('/:feedSlug/recommendations',
         const limit = parseInt(req.query.limit as string) || 5;
         const exclude = req.query.exclude ? (req.query.exclude as string).split(',') : [];
 
-        let posts: Post[] = [];
+        let posts: FeedPost[] = [];
 
         if (req.user && 'userEmbedding' in req.user && req.user.userEmbedding) {
-            posts = await searchPostsByEmbeddingWithPagination(
+            posts = await searchPostsInFeedByEmbedding(
                 req.user.userEmbedding as number[],
                 page,
                 limit,

@@ -4,7 +4,7 @@ import { FilesystemPostRepository } from '@repositories/postRepository';
 import { FilesystemUserRepository } from '@repositories/userRepository';
 import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
 import { createPostEmbedding } from '@services/contentExtractionService';
-import { searchPosts, searchPostsByEmbedding } from '@services/searchService';
+import { searchPosts, searchPostsInFeedByEmbedding } from '@services/searchService';
 import { Post } from '@models/posts';
 import { User } from '@models/users';
 
@@ -32,7 +32,7 @@ router.get('/',
             posts = await searchPosts(userQuery, queryEmbedding) || [];
           } else if (req.user && 'userEmbedding' in req.user && req.user.userEmbedding as number[]) {
             // 2. 추천 - 검색어는 없는데 user embedding이 있으면 user embedding을 이용해서 추천 아티클을 검색한다.
-            posts = await searchPostsByEmbedding(req.user.userEmbedding as number[]) || [];
+            posts = await searchPostsInFeedByEmbedding(req.user.userEmbedding as number[], feedId) || [];
           } else {
             // 3. cold start - 검색어도 없고 user embedding도 없으면 모든 게시글을 조회한다
             posts = await postsRepository.getAllPosts() || [];

@@ -3,7 +3,7 @@ import { opensearchClient, OPENSEARCH_INDEX_NAME } from '@adapters/secondary/ope
 import db from '@adapters/secondary/db/client';
 import { postsTable, feedPostsTable } from '@adapters/secondary/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { dateToUnixTimestamp, unixTimestampToDate } from '@system/timezone';
+import { dateToUnixTimestamp, getUnixTimestamp, unixTimestampToDate } from '@system/timezone';
 
 export class PostRepository {
     private db: typeof db;
@@ -31,9 +31,25 @@ export class PostRepository {
         return this.toDomainFeedPost(feedPost.feed_posts, feedPost.posts);
     }
 
-    async createPost(post: Post): Promise<Post> {
-        const dbPost = this.toDBPost(post);
-        const newPost = await this.db.insert(postsTable).values(dbPost).returning().get();
+    async createPost(
+        originalUrl: string,
+        textContent: string,
+        htmlContent: string | null,
+        title: string | null,
+        generatedSummary: string | null,
+        embedding: number[] | null
+    ): Promise<Post> {
+
+        const newPost = await this.db.insert(postsTable).values({
+            createdAt: getUnixTimestamp(),
+            originalUrl: originalUrl,
+            textContent: textContent,
+            htmlContent: htmlContent,
+            title: title,
+            generatedSummary: generatedSummary,
+            embedding: embedding ? JSON.stringify(embedding) : null
+        }).returning().get();
+
         return this.toDomainPost(newPost);
     }
 
@@ -42,7 +58,7 @@ export class PostRepository {
             feedId: feedId,
             postId: postId,
             ownerUserId: ownerUserId,
-            submittedAt: dateToUnixTimestamp(new Date()),
+            submittedAt: getUnixTimestamp(),
         });
     }
 

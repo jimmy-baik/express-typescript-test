@@ -1,6 +1,6 @@
 export interface ExtractedContent {
     title: string,
-    htmlContent: string,
+    htmlContent: string | null,
     textContent: string,
     originalUrl: string
 }

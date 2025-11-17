@@ -1,3 +1,10 @@
+export interface ExtractedContent {
+    title: string,
+    htmlContent: string,
+    textContent: string,
+    originalUrl: string
+}
+
 export interface Post {
     postId: number, // autoincrement id
     createdAt: Date, // 게시글 정보의 최초 생성 일시. 만일 중복으로 추가되었다면 현재 원본 타임스탬프가 우선

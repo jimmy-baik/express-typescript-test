@@ -1,23 +1,64 @@
 import express from 'express';
-import { randomUUID } from 'node:crypto';
 import { PostRepository } from '@repositories/postRepository';
-import { UserRepository } from '@repositories/userRepository';
+import { FeedRepository } from '@repositories/feedRepository';
 import db from '@adapters/secondary/db/client';
 import { opensearchClient } from '@adapters/secondary/opensearch';
 import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
-import { ingestContent } from '@services/contentExtractionService';
-import { calculateUserEmbedding } from '@services/embeddingsService';
-import { searchPostsByEmbeddingWithPagination, getFallbackRecommendations } from '@services/searchService';
-import { Post } from '@models/posts';
 import { User } from '@models/users';
-import { stripHtml } from "string-strip-html";
+import { Post } from '@models/posts';
+import { ingestContent } from '@services/contentExtractionService';
+import { searchPostsByEmbeddingWithPagination, getFallbackRecommendations } from '@services/searchService';
+
+
 
 const router = express.Router();
 
 // 게시글 Repository 설정
 const postsRepository = new PostRepository(db, opensearchClient);
 
-// 추천 게시글 피드 조회
+const feedsRepository = new FeedRepository(db);
+
+
+// 피드 생성
+router.post('/',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        if (!req.body || !req.body.title || !req.body.slug) {
+            return res.status(400).json({
+                error: '잘못된 요청입니다.',
+                message: '제목과 고유 주소를 입력해주세요.'
+            });
+        }
+
+        const userId = (req.user as User).userId;
+        const title = String(req.body.title);
+        const slug = String(req.body.slug);
+        const feed = await feedsRepository.createFeed(title, slug, userId);
+        res.status(201).json(feed);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+
+
+// 내 피드 조회
+router.get('/my-feeds',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        const userId = (req.user as User).userId;
+        const feeds = await feedsRepository.getAllFeedsByUserId(userId);
+        res.status(200).json(feeds);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+
+
+// 피드 내 추천 게시글 조회
 router.get('/:feedId/recommendations',
     requireLogin,
     async (req, res, next) => {

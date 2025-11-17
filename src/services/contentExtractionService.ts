@@ -1,18 +1,18 @@
 import { randomUUID } from 'node:crypto';
 import { extract, ArticleData } from '@extractus/article-extractor';
 import { Post } from '@models/posts';
-import { FilesystemPostRepository } from '@repositories/postRepository';
+import { PostRepository } from '@repositories/postRepository';
 import { llmClient, getEmbedding } from '@adapters/secondary/llm';
 import { fetchTranscript } from 'youtube-transcript-plus';
 import { TranscriptResponse } from 'youtube-transcript-plus/dist/types';
 import { Innertube } from 'youtubei.js';
 import Parser from 'rss-parser';
 
-export async function ingestContent(url:string, createdByUsername:string, postsRepository: FilesystemPostRepository) : Promise<void> {
+export async function ingestContent(url:string, feedId: number, userId: number, postsRepository: PostRepository) : Promise<void> {
     
   // RSS feed인 경우 feed에 등록된 전체 아티클을 처리하는 함수에 처리를 위임한 후 바로 종료한다.
   if (isRSSUrl(url)) {
-    await ingestRSSFeedArticles(url, createdByUsername, postsRepository);
+    await ingestRSSFeedArticles(url, userId, postsRepository);
     return;
   }
 
@@ -20,9 +20,9 @@ export async function ingestContent(url:string, createdByUsername:string, postsR
   let post: Post;
   const videoId = parseYoutubeVideoId(url);
   if (videoId) {
-    post = await extractYoutubeTranscript(videoId, createdByUsername);
+    post = await extractYoutubeTranscript(videoId, userId);
   } else {
-    post = await extractArticle(url, createdByUsername);
+    post = await extractArticle(url, userId);
   }
 
   // 요약과 임베딩을 병렬로 생성한다
@@ -42,9 +42,9 @@ export async function ingestContent(url:string, createdByUsername:string, postsR
   }
 
   // 요약을 포함하여 게시글을 저장한다
-  post.summary = summary;
+  post.generatedSummary = summary;
   post.embedding = embedding;
-  post.sourceUrl = url;
+  post.originalUrl = url;
   await postsRepository.createPost(post);
 }
 

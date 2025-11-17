@@ -59,10 +59,19 @@ router.get('/my-feeds',
 
 
 // 피드 내 추천 게시글 조회
-router.get('/:feedId/recommendations',
+router.get('/:feedSlug/recommendations',
     requireLogin,
     async (req, res, next) => {
     try {
+        const feedSlug = String(req.params.feedSlug);
+        const feed = await feedsRepository.getFeedBySlug(feedSlug);
+        if (!feed) {
+            return res.status(404).json({
+                error: '잘못된 요청입니다.',
+                message: '피드를 찾을 수 없습니다.'
+            });
+        }
+
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 5;
         const exclude = req.query.exclude ? (req.query.exclude as string).split(',') : [];
@@ -98,10 +107,27 @@ router.get('/:feedId/recommendations',
 
 
 // 피드에 게시글 추가
-router.post('/:feedId/url',
+router.post('/:feedSlug/url',
     requireLogin,
     async (req, res, next) => {
     try {
+        const feedSlug = String(req.params.feedSlug);
+        const feed = await feedsRepository.getFeedBySlug(feedSlug);
+        if (!feed) {
+            return res.status(404).json({
+                error: '피드를 찾을 수 없습니다.',
+                message: '피드를 찾을 수 없습니다.'
+            });
+        }
+
+        const userId = (req.user as User).userId;
+        if (!feed.memberUserIds.includes(userId)) {
+            return res.status(403).json({
+                error: '권한이 없습니다.',
+                message: '자신이 속해 있는 피드에만 컨텐츠를 추가할 수 있습니다.'
+            });
+        }
+
         // 요청 데이터 검증
         if (!req.body || !req.body.url) {
             return res.status(400).json({
@@ -109,22 +135,13 @@ router.post('/:feedId/url',
                 message: 'URL을 입력해주세요.'
             });
         }
-
-        if (!req.user || !('username' in req.user) || req.user.username === undefined || req.user.username === null) {
-            return res.status(400).json({
-                error: '잘못된 요청입니다.',
-                message: '로그인이 필요합니다.'
-            });
-        }
-
-        const createdByUsername = String(req.user.username);
-        const sourceUrl = String(req.body.url);
+        const originalUrl = String(req.body.url);
 
         // ingest 작업 예약
-        ingestContent(sourceUrl, createdByUsername, postsRepository);
+        ingestContent(originalUrl, feed.feedId, userId, postsRepository);
 
         // 작업 예약 후 바로 종료
-        res.redirect('/posts');
+        res.redirect(`/feeds/${feedSlug}`);
 
     } catch (err) {
         // 에러를 다음 미들웨어로 전달

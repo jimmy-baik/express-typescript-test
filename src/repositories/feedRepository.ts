@@ -83,6 +83,36 @@ export class FeedRepository {
         });
     }
 
+    async getFeedBySlug(slug: string): Promise<Feed|null> {
+        const feed = await this.db
+            .select({
+                feedId: feedsTable.feedId,
+                slug: feedsTable.slug,
+                title: feedsTable.title,
+                createdAt: feedsTable.createdAt,
+                ownerUserId: feedsTable.ownerUserId,
+                memberUserIds: sql<string>`GROUP_CONCAT(${feedMembersTable.userId})`.as('memberUserIds'),
+            })
+            .from(feedsTable)
+            .innerJoin(feedMembersTable, eq(feedsTable.feedId, feedMembersTable.feedId))
+            .where(eq(feedsTable.slug, slug))
+            .groupBy(
+                feedsTable.feedId,
+                feedsTable.slug,
+                feedsTable.title,
+                feedsTable.createdAt,
+                feedsTable.ownerUserId
+            )
+            .limit(1)
+            .get();
+
+        if (!feed) {
+            return null;
+        }
+        const memberUserIds = feed.memberUserIds ? feed.memberUserIds.split(',').map(id => parseInt(id, 10)) : [];
+        return this.toDomainFeed(feed, memberUserIds);
+    }
+
     private toDomainFeed(dbFeed: typeof feedsTable.$inferSelect, memberUserIds: number[]): Feed {
         return {
             ...dbFeed,

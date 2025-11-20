@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "ff68f48c-78bc-4106-b49d-e1d2d932aaa4",
+  "id": "e4adbbf6-13a0-46a1-ba86-b726463fde2e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "feed_ingestion_sources": {
@@ -85,7 +85,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "feed_ingestion_sources_feed_id_source_id_pk": {
+          "columns": [
+            "feed_id",
+            "source_id"
+          ],
+          "name": "feed_ingestion_sources_feed_id_source_id_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -95,14 +103,14 @@
         "feed_id": {
           "name": "feed_id",
           "type": "integer",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "user_id": {
           "name": "user_id",
           "type": "integer",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         }
@@ -136,7 +144,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "feed_members_feed_id_user_id_pk": {
+          "columns": [
+            "feed_id",
+            "user_id"
+          ],
+          "name": "feed_members_feed_id_user_id_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -214,7 +230,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "feed_posts_feed_id_post_id_pk": {
+          "columns": [
+            "feed_id",
+            "post_id"
+          ],
+          "name": "feed_posts_feed_id_post_id_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },

@@ -4,14 +4,16 @@ CREATE TABLE `feed_ingestion_sources` (
 	`owner_user_id` integer NOT NULL,
 	`title` text,
 	`description` text,
+	PRIMARY KEY(`feed_id`, `source_id`),
 	FOREIGN KEY (`feed_id`) REFERENCES `feeds`(`feed_id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`source_id`) REFERENCES `ingestion_sources`(`source_id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`owner_user_id`) REFERENCES `users`(`user_id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `feed_members` (
-	`feed_id` integer PRIMARY KEY NOT NULL,
-	`user_id` integer PRIMARY KEY NOT NULL,
+	`feed_id` integer NOT NULL,
+	`user_id` integer NOT NULL,
+	PRIMARY KEY(`feed_id`, `user_id`),
 	FOREIGN KEY (`feed_id`) REFERENCES `feeds`(`feed_id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON UPDATE no action ON DELETE no action
 );
@@ -21,6 +23,7 @@ CREATE TABLE `feed_posts` (
 	`post_id` integer NOT NULL,
 	`owner_user_id` integer NOT NULL,
 	`submitted_at` integer NOT NULL,
+	PRIMARY KEY(`feed_id`, `post_id`),
 	FOREIGN KEY (`feed_id`) REFERENCES `feeds`(`feed_id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`post_id`) REFERENCES `posts`(`post_id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`owner_user_id`) REFERENCES `users`(`user_id`) ON UPDATE no action ON DELETE no action

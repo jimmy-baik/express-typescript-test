@@ -1,4 +1,4 @@
-import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { int, sqliteTable, text, primaryKey } from "drizzle-orm/sqlite-core";
 
 
 export const usersTable = sqliteTable("users", {
@@ -37,16 +37,20 @@ export const ingestionSourcesTable = sqliteTable("ingestion_sources", {
 
 // 다대다 mapping 테이블
 export const feedMembersTable = sqliteTable("feed_members", {
-    feedId: int('feed_id').primaryKey().references(() => feedsTable.feedId),
-    userId: int('user_id').primaryKey().references(() => usersTable.userId),
-});
+    feedId: int('feed_id').notNull().references(() => feedsTable.feedId),
+    userId: int('user_id').notNull().references(() => usersTable.userId),
+}, (table) => [
+    primaryKey({ columns: [table.feedId, table.userId] }),
+]);
 
 export const feedPostsTable = sqliteTable("feed_posts", {
     feedId: int('feed_id').notNull().references(() => feedsTable.feedId),
     postId: int('post_id').notNull().references(() => postsTable.postId),
     ownerUserId: int('owner_user_id').notNull().references(() => usersTable.userId), // 어느 사용자가 추가한 컨텐츠인지 참조
     submittedAt: int('submitted_at').notNull(), // sqlite는 timestamp 타입이 없으므로 int로 저장 // 원본 post의 createdAt과는 별개로 현재 owner가 언제 추가했는지를 기록
-});
+}, (table) => [
+    primaryKey({ columns: [table.feedId, table.postId] }),
+]);
 
 export const feedIngestionSourcesTable = sqliteTable("feed_ingestion_sources", {
     feedId: int('feed_id').notNull().references(() => feedsTable.feedId),
@@ -54,7 +58,9 @@ export const feedIngestionSourcesTable = sqliteTable("feed_ingestion_sources", {
     ownerUserId: int('owner_user_id').notNull().references(() => usersTable.userId), // 어느 사용자가 추가한 소스인지 참조
     title: text(), // 소스 제목 (optional)
     description: text(), // 소스 설명 (optional)
-});
+}, (table) => [
+    primaryKey({ columns: [table.feedId, table.sourceId] }),
+]);
 
 // 사용자 선호도 기록
 export const userPostInteractionsTable = sqliteTable("user_post_interactions", {

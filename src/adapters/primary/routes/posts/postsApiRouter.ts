@@ -26,31 +26,26 @@ router.post('/:postId/like',
     async (req, res, next) => {
     try {
         const postId = Number(req.params.postId);
-        const user = req.user;
-        if (!user || !('username' in user) || user.username === undefined || user.username === null) {
-            return res.status(400).json({
-                error: '잘못된 요청입니다.',
-                message: '로그인이 필요합니다.'
-            });
-        }
-        const username = String(user.username);
+        const user = req.user as User;
         const post = await postsRepository.getPostByPostId(postId);
         if (!post) {
-            return res.status(400).json({
+            return res.status(404).json({
                 error: '잘못된 요청입니다.',
-                message: '게시글을 찾을 수 없습니다.'
+                message: '컨텐츠를 찾을 수 없습니다.'
             });
         }
-        // 내역을 사용자 프로필에 저장한다.
-        const likedPosts = await usersRepository.likePost(username, postId);
-        (user as User).likedPostsId = likedPosts;
 
+        // 내역을 사용자 프로필에 저장한다.
+        await usersRepository.likePost(user.userId, postId);
+        
         // user embedding 계산 작업을 에약한다.
-        calculateUserEmbedding(user as User, postsRepository).then( async (userEmbedding) => {
-            if (userEmbedding) {
-                await usersRepository.updateUserEmbedding(username, userEmbedding);
-            }
-        })
+        usersRepository.getUserInteractionHistory(user.userId)
+            .then(async (userInteractionHistory) => await calculateUserEmbedding(userInteractionHistory, postsRepository))
+            .then(async (userEmbedding) => {
+                if (userEmbedding) {
+                    await usersRepository.updateUserEmbedding(user.userId, userEmbedding);
+                }   
+            });
 
         res.status(200).send();
     } catch (err) {
@@ -63,31 +58,26 @@ router.post('/:postId/viewed',
     requireLogin,
     async (req, res, next) => {
     try {
-        const postId = String(req.params.postId);
-        const user = req.user;
-        if (!user || !('username' in user) || user.username === undefined || user.username === null) {
-            return res.status(400).json({
-                error: '잘못된 요청입니다.',
-                message: '로그인이 필요합니다.'
-            });
-        }
-        const username = String(user.username);
+        const postId = Number(req.params.postId);
+        const user = req.user as User;
         const post = await postsRepository.getPostByPostId(postId);
         if (!post) {
-            return res.status(400).json({
+            return res.status(404).json({
                 error: '잘못된 요청입니다.',
-                message: '게시글을 찾을 수 없습니다.'
+                message: '컨텐츠를 찾을 수 없습니다.'
             });
         }
-        const viewedPosts = await usersRepository.viewPost(username, postId);
-        (user as User).viewedPostsId = viewedPosts;
 
+        // 내역을 사용자 프로필에 저장한다.
+        await usersRepository.viewPost(user.userId, postId);
         // user embedding 계산 작업을 에약한다.
-        calculateUserEmbedding(user as User, postsRepository).then( async (userEmbedding) => {
-            if (userEmbedding) {
-                await usersRepository.updateUserEmbedding(username, userEmbedding);
-            }
-        })
+        usersRepository.getUserInteractionHistory(user.userId)
+            .then(async (userInteractionHistory) => await calculateUserEmbedding(userInteractionHistory, postsRepository))
+            .then(async (userEmbedding) => {
+                if (userEmbedding) {
+                    await usersRepository.updateUserEmbedding(user.userId, userEmbedding);
+                }   
+            });
 
         res.status(200).send();
     }

@@ -132,3 +132,5 @@ router.post('/:feedSlug/url',
         next(err);
     }
 });
+
+export default router;

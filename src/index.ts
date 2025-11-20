@@ -14,11 +14,12 @@ import { initializeOpenSearch } from '@adapters/secondary/opensearch';
 
 // View 경로 (HTML 웹페이지를 반환)
 import authViewRouter from '@adapters/primary/routes/auth/authViewRouter';
-import postsViewRouter from '@adapters/primary/routes/posts/postsViewRouter';
+import feedsViewRouter from '@adapters/primary/routes/feeds/feedsViewRouter';
 
 // API 경로 (JSON 응답을 반환)
 import authApiRouter from '@adapters/primary/routes/auth/authApiRouter';
 import usersApiRouter from '@adapters/primary/routes/users/usersApiRouter';
+import feedsApiRouter from '@adapters/primary/routes/feeds/feedsApiRouter';
 import postsApiRouter from '@adapters/primary/routes/posts/postsApiRouter';
 
 
@@ -146,20 +147,20 @@ passport.deserializeUser(async (userId: number, done) => {
     }
 });
 
-// 기본 라우트
+// 기본 경로 등록
 app.get('/', (req, res) => {
     res.render('index', { title: 'Smallfeed - 내가 직접 만드는 우리만의 피드' });
 });
 
-
-// View 경로 (HTML 웹페이지를 반환)
+// View 경로 등록
 app.use('/', authViewRouter);
-app.use('/posts', postsViewRouter);
+app.use('/feeds', feedsViewRouter);
 
 
-// API 경로 (JSON 응답)
+// API 경로 등록
 app.use('/api/auth', authApiRouter);
 app.use('/api/users', usersApiRouter);
+app.use('/api/feeds', feedsApiRouter);
 app.use('/api/posts', postsApiRouter);
 
 

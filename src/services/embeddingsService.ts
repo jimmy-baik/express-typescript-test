@@ -1,38 +1,18 @@
-import { User } from '@models/users';
-import { FilesystemPostRepository } from '@repositories/postRepository';
+import { User, UserInteractionHistory } from '@models/users';
+import { PostRepository } from '@repositories/postRepository';
 
 
-export async function calculateUserEmbedding(user: User, postsRepository: FilesystemPostRepository) : Promise<number[]|null> {
+export async function calculateUserEmbedding(userInteractionHistory: UserInteractionHistory, postsRepository: PostRepository) : Promise<number[]|null> {
 
-    if (user.viewedPostsId.length === 0 && user.likedPostsId.length === 0) {
+    if (userInteractionHistory.viewedPostIds.length < 1  && userInteractionHistory.likedPostIds.length < 1) {
         return null;
     }
 
     // 사용자가 조회한 게시물과 좋아요를 누른 게시물의 embedding을 모두 가져온다.
     const [viewedPostsEmbeddings, likedPostsEmbeddings] = await Promise.all([
-        Promise.all(user.viewedPostsId.map(async (postId) => {
-            const post = await postsRepository.getPost(postId);
-            if (!post) {
-                return null;
-            }
-            return post.embedding;
-        })),
-        Promise.all(user.likedPostsId.map(async (postId) => {
-            const post = await postsRepository.getPost(postId);
-            if (!post) {
-                return null;
-            }
-            return post.embedding;
-        }))
+        postsRepository.getPostsByPostIds(userInteractionHistory.viewedPostIds).then(posts => posts.map(post => post.embedding)), // 조회한 게시물의 embedding을 가져온다.
+        postsRepository.getPostsByPostIds(userInteractionHistory.likedPostIds).then(posts => posts.map(post => post.embedding)) // 좋아요를 누른 게시물의 embedding을 가져온다.
     ]);
-
-    if (viewedPostsEmbeddings.length === 0 && likedPostsEmbeddings.length === 0) {
-        return null;
-    }
-
-    if (viewedPostsEmbeddings === null || likedPostsEmbeddings === null) {
-        return null;
-    }
 
     const averagedViewedPostsEmbedding = averageEmbeddings(viewedPostsEmbeddings);
     const averagedLikedPostsEmbedding = averageEmbeddings(likedPostsEmbeddings);

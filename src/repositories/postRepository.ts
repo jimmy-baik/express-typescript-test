@@ -2,7 +2,7 @@ import type { Post, FeedPost } from '@models/posts';
 import { opensearchClient, OPENSEARCH_INDEX_NAME } from '@adapters/secondary/opensearch';
 import db from '@adapters/secondary/db/client';
 import { postsTable, feedPostsTable } from '@adapters/secondary/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { dateToUnixTimestamp, getUnixTimestamp, unixTimestampToDate } from '@system/timezone';
 
 export class PostRepository {
@@ -22,6 +22,11 @@ export class PostRepository {
     async getPostByPostId(postId: number): Promise<Post|null> {
         const post = await this.db.select().from(postsTable).where(eq(postsTable.postId, postId)).limit(1).get();
         return post ? this.toDomainPost(post) : null;
+    }
+
+    async getPostsByPostIds(postIds: number[]): Promise<Post[]> {
+        const posts = await this.db.select().from(postsTable).where(inArray(postsTable.postId, postIds));
+        return posts.map(this.toDomainPost);
     }
 
     async getPostInFeed(feedId: number, postId:number): Promise<FeedPost|null> {

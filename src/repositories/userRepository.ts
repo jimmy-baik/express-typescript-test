@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import type { User } from '@models/users';
+import type { User, UserInteractionHistory } from '@models/users';
 import { UserInteractionType } from '@models/users';
 import db from '@adapters/secondary/db/client';
 import { usersTable, userPostInteractionsTable } from '@adapters/secondary/db/schema';
@@ -28,6 +28,11 @@ export class UserRepository {
             return null;
         }
         return this.toDomainUser(user);
+    }
+
+    async getUserInteractionHistory(userId: number): Promise<UserInteractionHistory> {
+        const userInteractions = await this.db.select().from(userPostInteractionsTable).where(eq(userPostInteractionsTable.userId, userId)).all();
+        return this.toDomainUserInteractionHistory(userInteractions);
     }
 
     async createUser(username: string, password: string, fullname: string | null): Promise<User> {
@@ -80,6 +85,24 @@ export class UserRepository {
             ...user,
             createdAt: unixTimestampToDate(user.createdAt),
             userEmbedding: user.userEmbedding ? JSON.parse(user.userEmbedding) : null,
+        };
+    }
+
+    private toDomainUserInteractionHistory(userInteractions: typeof userPostInteractionsTable.$inferSelect[]): UserInteractionHistory {
+        const likedPostIds:number[] = [];
+        const viewedPostIds:number[] = [];
+
+        for (const interaction of userInteractions) {
+            if (interaction.interactionType === UserInteractionType.LIKE) {
+                likedPostIds.push(interaction.postId);
+            } else if (interaction.interactionType === UserInteractionType.VIEW) {
+                viewedPostIds.push(interaction.postId);
+            }
+        }
+
+        return {
+            likedPostIds : likedPostIds,
+            viewedPostIds : viewedPostIds
         };
     }
 

@@ -1,40 +1,41 @@
 import { opensearchClient, OPENSEARCH_INDEX_NAME } from '@adapters/secondary/opensearch';
 import { Post } from '@models/posts';
+import { User } from '@models/users';
+import { Feed } from '@models/feeds';
+import { PostRepository } from '@repositories/postRepository';
+import { UserRepository } from '@repositories/userRepository';
 
-export async function searchPosts(userQuery: string, queryEmbedding: number[], size: number = 5) {
+export async function searchPostsInFeedByKeyword(userQuery: string, feedId: number) {
 
-    // BM25 + kNN vector 하이브리드 검색
+    // 키워드 검색
     const opensearchResponse = await opensearchClient.search({
         index: OPENSEARCH_INDEX_NAME,
         body: {
-            size: size,
             query: {
-                hybrid: {
-                    queries: [
+                bool: {
+                    must: [
                         {
                             multi_match: {
                                 query: userQuery,
                                 fields: [
                                     'title^3', // title 에 제일 높은 가중치를 준다.
-                                    'summary^2', // summary 에 두 번째로 높은 가중치를 준다.
-                                    'content',
-                                    'createdBy'
+                                    'generatedSummary^2', // generatedSummary 에 두 번째로 높은 가중치를 준다.
+                                    'textContent'
                                 ],
                                 operator: 'and'
                             }
-                        },
+                        }
+                    ],
+                    filter: [
                         {
-                            knn: {
-                                embedding: {
-                                    vector: queryEmbedding,
-                                    k: 50
-                                }
+                            term: {
+                                feedId: feedId
                             }
                         }
                     ]
                 }
             },
-            _source: ['id', 'timestamp', 'title', 'summary', 'content', 'createdBy']
+            _source: ['postId', 'submittedAt', 'originalUrl', 'textContent', 'title', 'generatedSummary']
         }
     });
 
@@ -46,7 +47,7 @@ export async function searchPostsInFeedByEmbedding(
     embedding: number[], 
     feedId: number,
     limit: number = 5,
-    excludeIds: string[] = []
+    excludeIds: number[] = []
 ) {
     
     // 제일 좁은 범위의 연관성 검색부터 시작해서 점점 범위를 넓혀가는 검색 전략을 여러 개 선언해놓는다.
@@ -237,13 +238,27 @@ export async function searchPostsInFeedByEmbedding(
             }
             console.log(`Search strategy ${strategy.name} found ${results.length} results. moving on..`);
         } catch (error) {
-            console.warn(`Search strategy ${strategy.name} failed:`, error);
             // 오류 발생시 다음 전략으로 넘어간다
+            console.warn(`Search strategy ${strategy.name} failed:`, error);
+            continue;
         }
     }
 
     // 모든 전략이 실패할 경우 빈 배열을 반환한다.
     return [];
+}
+
+export async function getRecommendationsForUser(user:User, feed:Feed, userRepository:UserRepository, postRepository:PostRepository, limit:number = 10, excludeIds:number[] = []) {
+
+    const postsPromise = user.userEmbedding ? searchPostsInFeedByEmbedding(user.userEmbedding, feed.feedId, limit, excludeIds) : postRepository.getAllPostsInFeed(feed.feedId).then(posts => posts.filter(post => !excludeIds.includes(post.postId)));
+    const userInteractionHistoryPromise = userRepository.getUserInteractionHistory(user.userId);
+
+    const [posts, userInteractionHistory] = await Promise.all([postsPromise, userInteractionHistoryPromise]);
+
+    return {
+        posts: posts,
+        userInteractionHistory: userInteractionHistory
+    };
 }
 
 // 유저 임베딩이 없거나 모든 검색 전략이 실패할 경우 사용
@@ -287,6 +302,12 @@ export async function getFallbackRecommendations(
     return filterUniqueSearchResults(opensearchResponse);
 }
 
+
+/**
+ * OpenSearch 응답 결과에서 중복된 결과를 제거하는 helper 함수
+ * @param opensearchResponse OpenSearch 응답 결과
+ * @returns 검색 결과 중복 제거 후 반환
+ */
 function filterUniqueSearchResults(opensearchResponse: any) : Post[] {
     const searchResults: Post[] = (opensearchResponse.body.hits?.hits || [])
       .sort((a: any, b: any) => b._score - a._score)

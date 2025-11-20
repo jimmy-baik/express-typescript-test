@@ -1,13 +1,13 @@
 import express from 'express';
+import db from '@adapters/secondary/db/client';
 import { PostRepository } from '@repositories/postRepository';
 import { FeedRepository } from '@repositories/feedRepository';
-import db from '@adapters/secondary/db/client';
+import { UserRepository } from '@repositories/userRepository';
 import { opensearchClient } from '@adapters/secondary/opensearch';
 import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
 import { User } from '@models/users';
-import { Post, FeedPost } from '@models/posts';
 import { ingestContent } from '@services/contentExtractionService';
-import { searchPostsInFeedByEmbedding, getFallbackRecommendations } from '@services/searchService';
+import { getRecommendationsForUser } from '@services/searchService';
 
 
 
@@ -15,7 +15,7 @@ const router = express.Router();
 
 // 게시글 Repository 설정
 const postsRepository = new PostRepository(db, opensearchClient);
-
+const usersRepository = new UserRepository(db);
 const feedsRepository = new FeedRepository(db);
 
 
@@ -63,41 +63,25 @@ router.get('/:feedSlug/recommendations',
     requireLogin,
     async (req, res, next) => {
     try {
+
+        const limit = parseInt(req.query.limit as string) || 10;
+        const excludeIds = req.query.exclude ? (req.query.exclude as string).split(',').map(id => parseInt(id)) : [];
+
+        const user = req.user as User;
         const feedSlug = String(req.params.feedSlug);
         const feed = await feedsRepository.getFeedBySlug(feedSlug);
         if (!feed) {
             return res.status(404).json({
-                error: '잘못된 요청입니다.',
+                error: '피드를 찾을 수 없습니다.',
                 message: '피드를 찾을 수 없습니다.'
             });
         }
 
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 5;
-        const exclude = req.query.exclude ? (req.query.exclude as string).split(',') : [];
-
-        let posts: FeedPost[] = [];
-
-        if (req.user && 'userEmbedding' in req.user && req.user.userEmbedding) {
-            posts = await searchPostsInFeedByEmbedding(
-                req.user.userEmbedding as number[],
-                page,
-                limit,
-                exclude
-            );
-        } else {
-            // 유저 임베딩이 없을 경우 사용
-            posts = await getFallbackRecommendations(
-                page,
-                limit,
-                exclude
-            );
-        }
+        const {posts, userInteractionHistory} = await getRecommendationsForUser(user, feed, usersRepository, postsRepository, limit, excludeIds);
 
         res.json({
             posts: posts,
-            hasMore: posts.length === limit,
-            page: page
+            hasMore: posts.length === limit
         });
     }
     catch (err) {

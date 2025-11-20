@@ -2,7 +2,7 @@ import type { Post, FeedPost } from '@models/posts';
 import { opensearchClient, OPENSEARCH_INDEX_NAME } from '@adapters/secondary/opensearch';
 import db from '@adapters/secondary/db/client';
 import { postsTable, feedPostsTable } from '@adapters/secondary/db/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, desc } from 'drizzle-orm';
 import { dateToUnixTimestamp, getUnixTimestamp, unixTimestampToDate } from '@system/timezone';
 
 export class PostRepository {
@@ -39,6 +39,17 @@ export class PostRepository {
         }
 
         return this.toDomainFeedPost(feedPost.feed_posts, feedPost.posts);
+    }
+
+    async getAllPostsInFeed(feedId: number, limit: number|null = null): Promise<FeedPost[]> {
+        const baseQuery = this.db.select().from(feedPostsTable)
+            .innerJoin(postsTable, eq(feedPostsTable.postId, postsTable.postId))
+            .where(eq(feedPostsTable.feedId, feedId)).orderBy(desc(feedPostsTable.submittedAt));
+        
+        // limit이 null이면 모든 게시글을 조회, 아니면 limit만큼 조회
+        const feedPosts = limit === null ? await baseQuery.all() : await baseQuery.limit(limit).all();
+
+        return feedPosts.map(feedPost => this.toDomainFeedPost(feedPost.feed_posts, feedPost.posts));
     }
 
     async createPost(

@@ -18,6 +18,37 @@ const postsRepository = new PostRepository(db, opensearchClient);
 const feedsRepository = new FeedRepository(db);
 const usersRepository = new UserRepository(db);
 
+// 피드 목록 조회
+router.get('/',
+    requireLogin,
+    async (req, res, next) => {
+        try {
+            const user = req.user as User;
+
+            // 사용자가 속한 피드를 모두 조회
+            const feeds = await feedsRepository.getAllFeedsByUserId(user.userId);
+            
+            // 각 피드에 대해 최근 3개의 게시글을 가져옴
+            const feedsWithPosts = await Promise.all(
+                feeds.map(async (feed) => {
+                    const posts = await postsRepository.getAllPostsInFeed(feed.feedId, 3);
+                    return {
+                        ...feed,
+                        posts: posts
+                    };
+                })
+            );
+
+            res.render('feeds', {
+                title: '피드 목록',
+                feeds: feedsWithPosts
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+);
+
 // 피드의 컨텐츠 목록 조회
 router.get('/:feedSlug',
     requireLogin,

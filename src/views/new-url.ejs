@@ -5,60 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>새 글 작성</title>
     <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/header.css">
-    <link rel="stylesheet" href="/css/posts.css">
-
-<style>
-    .actions {
-        display: flex;
-        gap: 16px;
-        margin-top: 32px;
-    }
-
-    .btn {
-        display: inline-block;
-        padding: 12px 24px;
-        background: #000000;
-        color: #ffffff;
-        text-decoration: none;
-        border-radius: 8px;
-        font-weight: 500;
-        font-size: 16px;
-        transition: all 0.2s ease;
-        border: none;
-        cursor: pointer;
-        flex: 1;
-        text-align: center;
-    }
-
-    .btn:hover {
-        background: #292929;
-        transform: translateY(-1px);
-    }
-
-    .btn:active {
-        transform: translateY(0);
-    }
-
-    /* 반응형 대응 */
-    @media (max-width: 768px) {
-        .main-content {
-            padding: 0 16px;
-        }
-        
-        .form-container {
-            padding: 32px 24px;
-        }
-        
-        .form-title {
-            font-size: 28px;
-        }
-        
-        .actions {
-            flex-direction: column;
-        }
-    }
-</style>
+    <link rel="stylesheet" href="/css/header-styles.css">
+    <link rel="stylesheet" href="/css/form-styles.css">
 </head>
 <body>
     <%- include('partials/header.ejs') %>
@@ -67,11 +15,11 @@
     <main class="main-content">
         <div class="content-container">
             <div class="form-container">
-                <h1 class="form-title">링크 등록</h1>
+                <h1 class="form-title">컨텐츠 추가하기</h1>
                 
-                <form action="/api/posts/from-url" method="POST">
+                <form action="/api/feeds/<%= feedSlug %>/url" method="POST">
                     <div class="form-group">
-                        <label for="url">저장할 링크를 입력해주세요</label>
+                        <label for="url">추가할 컨텐츠의 URL을 입력해주세요.</label>
                         <input type="url" id="url" name="url" placeholder="https://example.com" required>
                     </div>
                     

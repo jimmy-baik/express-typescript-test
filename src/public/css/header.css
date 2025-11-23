@@ -168,6 +168,16 @@
         height: 14px;
     }
     
+    .add-content-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .add-content-btn-icon {
+        width: 14px;
+        height: 14px;
+    }
+    
     .notification-icon {
         width: 20px;
         height: 20px;
@@ -197,6 +207,16 @@
     }
     
     .write-icon {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .add-content-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+    
+    .add-content-btn-icon {
         width: 12px;
         height: 12px;
     }

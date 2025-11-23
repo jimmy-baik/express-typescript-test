@@ -19,23 +19,38 @@ const usersRepository = new UserRepository(db);
 const feedsRepository = new FeedRepository(db);
 
 
+/**
+ * 정해진 길이의 랜덤 문자열을 생성하는 helper 함수
+ * @param length 문자열 길이
+ * @returns 입력된 길이만큼의 랜덤 문자열
+ */
+function generateRandomString(length: number): string {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
+
 // 피드 생성
 router.post('/',
     requireLogin,
     async (req, res, next) => {
     try {
-        if (!req.body || !req.body.title || !req.body.slug) {
+        if (!req.body || !req.body.title) {
             return res.status(400).json({
                 error: '잘못된 요청입니다.',
-                message: '제목과 고유 주소를 입력해주세요.'
+                message: '제목을 입력해주세요.'
             });
         }
 
         const userId = (req.user as User).userId;
         const title = String(req.body.title);
-        const slug = String(req.body.slug);
+        const slug = generateRandomString(10); // 10자리의 랜덤 문자열을 생성해서 url slug로 사용한다
         const feed = await feedsRepository.createFeed(title, slug, userId);
-        res.status(201).json(feed);
+        // 피드 목록으로 리다이렉트
+        res.redirect(`/feeds`);
     }
     catch (err) {
         next(err);
@@ -43,22 +58,7 @@ router.post('/',
 });
 
 
-// 내 피드 조회
-router.get('/my-feeds',
-    requireLogin,
-    async (req, res, next) => {
-    try {
-        const userId = (req.user as User).userId;
-        const feeds = await feedsRepository.getAllFeedsByUserId(userId);
-        res.status(200).json(feeds);
-    }
-    catch (err) {
-        next(err);
-    }
-});
-
-
-// 피드 내 추천 게시글 조회
+// 무한 스크롤시 피드의 추천 게시글을 계속 조회하는 경로
 router.get('/:feedSlug/recommendations',
     requireLogin,
     async (req, res, next) => {

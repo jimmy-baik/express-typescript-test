@@ -6,36 +6,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
     <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/header.css">
-    <link rel="stylesheet" href="/css/posts.css">
+    <link rel="stylesheet" href="/css/header-styles.css">
+    <link rel="stylesheet" href="/css/posts-styles.css">
 </head>
 <body>
 
     <%- include('partials/header.ejs') %>
 
     <main class="main-content">
-        <div class="content-container">
+        <div class="content-container" data-feed-slug="<%= typeof feedSlug !== 'undefined' ? feedSlug : '' %>">
             <% if (posts && posts.length > 0) { %>
                 <div class="posts-list">
                     <% posts.forEach(function(post) { %>
                         <article class="post-item">
                             <div class="post-content">
-                                <div class="post-author-info">
-                                    <span class="author-name"><%= post.createdBy %></span>
-                                </div>
+                                <!-- <div class="post-author-info">
+                                    <span class="author-name"><%= post.ownerUserId %></span>
+                                </div> -->
                                 <h2 class="post-title">
-                                    <a href="<%= post.sourceUrl %>" data-post-id="<%= post.id %>"><%= post.title %></a>
+                                    <a href="<%= post.originalUrl %>" data-post-id="<%= post.postId %>"><%= post.title %></a>
                                 </h2>
                                 <div class="post-subtitle">
-                                    <%= post.content ? post.content.substring(0, 150) + '...' : '설명 없음' %>
+                                    <%= post.textContent ? post.textContent.substring(0, 150) + '...' : '설명 없음' %>
                                 </div>
                                 <div class="post-meta">
                                     <div class="meta-item">
-                                        <span><%= new Date(post.timestamp).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) %></span>
+                                        <span><%= new Date(post.submittedAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) %></span>
                                     </div>
                                 </div>
-                                <% if (post.summary) { %>
-                                    <div class="accordion-section" data-post-id="<%= post.id %>">
+                                <% if (post.generatedSummary) { %>
+                                    <div class="accordion-section" data-post-id="<%= post.postId %>">
                                         <button class="accordion-toggle" type="button">
                                             <span class="accordion-label">✶.˚ AI 요약</span>
                                             <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -43,20 +43,20 @@
                                             </svg>
                                         </button>
                                         <div class="accordion-content">
-                                            <div class="accordion-summary"><%= post.summary %></div>
-                                            <a href="<%= post.sourceUrl %>" class="view-full-btn" target="_blank" rel="noopener noreferrer">더 읽기</a>
+                                            <div class="accordion-summary"><%= post.generatedSummary %></div>
+                                            <a href="<%= post.originalUrl %>" class="view-full-btn" target="_blank" rel="noopener noreferrer">더 읽기</a>
                                         </div>
                                     </div>
                                 <% } %>
 
                             </div>
                             <div class="post-actions">
-                                <svg class="heart-icon <%= (userLikedPosts && userLikedPosts.includes(post.id)) ? 'liked' : '' %>" 
+                                <svg class="heart-icon <%= (userLikedPosts && userLikedPosts.includes(post.postId)) ? 'liked' : '' %>" 
                                      viewBox="0 0 24 24" 
-                                     fill="<%= (userLikedPosts && userLikedPosts.includes(post.id)) ? 'currentColor' : 'none' %>" 
+                                     fill="<%= (userLikedPosts && userLikedPosts.includes(post.postId)) ? 'currentColor' : 'none' %>" 
                                      stroke="currentColor" 
                                      stroke-width="2"
-                                     data-post-id="<%= post.id %>">
+                                     data-post-id="<%= post.postId %>">
                                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                 </svg>
                                 <!-- <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -124,7 +124,16 @@
             
             <% if (!posts || posts.length === 0) { %>
                 <div class="no-posts">
-                    <p>게시글이 없습니다.</p>
+                    <p>아직 게시글이 없어요. 첫 컨텐츠를 추가해 보세요.</p>
+                    <% if (typeof feedSlug !== 'undefined') { %>
+                        <a href="/feeds/<%= feedSlug %>/new-url" class="add-content-btn" style="margin-top: 20px;">
+                            <svg class="add-content-btn-icon" viewBox="0 0 24 24">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            컨텐츠 추가하기
+                        </a>
+                    <% } %>
                 </div>
             <% } %>
         </div>
@@ -132,6 +141,8 @@
     </main>
 
 </body>
-<script src="/js/posts.js"></script>
+<script src="/js/user-engagements.mjs" type="module"></script>
+<script src="/js/posts.js" type="module"></script>
+
 </html>
 

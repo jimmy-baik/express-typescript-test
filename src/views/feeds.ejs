@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>피드 목록</title>
+    <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/header-styles.css">
+    <link rel="stylesheet" href="/css/feeds-styles.css">
+</head>
+<body>
+
+    <%- include('partials/header.ejs') %>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main-content">
+        <div class="content-container">
+            <% if (feeds && feeds.length > 0) { %>
+                <div class="feeds-list">
+                    <% feeds.forEach(function(feed) { %>
+                        <div class="feed-card">
+                            <div class="feed-header">
+                                <div class="feed-title-section">
+                                    <a class="feed-title" href="/feeds/<%= feed.slug %>" data-feed-id="<%= feed.feedId %>"><%= feed.title %></a>
+                                    <div class="feed-meta">
+                                        <svg class="people-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="9" cy="7" r="4"></circle>
+                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                        </svg>
+                                        <span class="member-count"><%= feed.memberUserIds ? feed.memberUserIds.length : 0 %>명</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="feed-posts">
+                                <% if (feed.posts && feed.posts.length > 0) { %>
+                                    <% feed.posts.slice(0, 3).forEach(function(post) { %>
+                                        <div class="post-item">
+                                            <div class="post-content">
+                                                <!-- <div class="post-author-info">
+                                                    <span class="author-avatar">U</span>
+                                                    <span class="author-name">사용자</span>
+                                                </div> -->
+                                                <% if (post.title) { %>
+                                                    <h3 class="post-title">
+                                                        <a href="<%= post.originalUrl || '#' %>" target="_blank" rel="noopener noreferrer" data-post-id="<%= post.postId %>"><%= post.title %></a>
+                                                    </h3>
+                                                <% } %>
+                                                <% if (post.textContent) { %>
+                                                    <div class="post-subtitle"><%= post.textContent.substring(0, 150) %><%= post.textContent.length > 150 ? '...' : '' %></div>
+                                                <% } %>
+                                                <div class="post-meta">
+                                                    <span><%= new Date(post.submittedAt || post.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) %></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                <% } else { %>
+                                    <div class="no-posts">아직 게시글이 없습니다.</div>
+                                <% } %>
+                            </div>
+
+                            <a href="/feeds/<%= feed.slug %>" class="view-more-btn">더 보기</a>
+                        </div>
+                    <% }); %>
+                </div>
+                <!-- 새 피드 만들기 -->
+                <div class="create-feed-section">
+                    <a href="/feeds/new" class="create-feed-link">
+                        <svg class="create-feed-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <div class="create-feed-text">피드 추가하기</div>
+                        <div class="create-feed-subtext">새로운 주제의 피드를 만들어 보세요.</div>
+                    </a>
+                </div>
+            <% } else { %>
+                <div class="no-feeds">
+                    <h2 class="no-feeds-title">피드가 없습니다</h2>
+                    <p class="no-feeds-text">새 피드를 만들어 시작해보세요.</p>
+                    <a href="/feeds/new" class="cta-primary">
+                        <span>+ 피드 추가하기</span>
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </main>
+</body>
+<script src="/js/user-engagements.mjs" type="module"></script>
+<script>
+    // 게시글 열람이력 추적
+    document.addEventListener('DOMContentLoaded', function() {
+        const feedsList = document.querySelector('.feeds-list');
+        if (feedsList) {
+            feedsList.addEventListener('click', function(e) {
+                const postLink = e.target.closest('a[data-post-id]');
+                if (postLink) {
+                    const postId = postLink.getAttribute('data-post-id');
+                    if (postId) {
+                        logUserVisitedPost(postId);
+                    }
+                }
+            });
+        }
+    });
+</script>
+</html>
+

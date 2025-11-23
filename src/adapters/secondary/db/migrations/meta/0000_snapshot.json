@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "e4adbbf6-13a0-46a1-ba86-b726463fde2e",
+  "id": "b976ca1e-ca55-4659-abf0-0e0256e57c7d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "feed_ingestion_sources": {
@@ -372,8 +372,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "textContent": {
-          "name": "textContent",
+        "text_content": {
+          "name": "text_content",
           "type": "text",
           "primaryKey": false,
           "notNull": true,

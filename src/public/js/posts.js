@@ -1,11 +1,14 @@
+import { logUserVisitedPost } from './user-engagements.mjs';
+
 class InfiniteScrollFeedController {
-    constructor() {
+    constructor(feedSlug) {
         this.currentPage = 1;
         this.isLoading = false;
         this.hasMore = true;
         this.loadedPostIds = new Set();
         this.postsContainer = document.querySelector('.posts-list');
         this.loadingIndicator = this.createLoadingIndicator();
+        this.feedSlug = feedSlug;
         
         this.init();
     }
@@ -49,33 +52,33 @@ class InfiniteScrollFeedController {
         const article = template.content.cloneNode(true);
         
         // 날짜 포맷팅
-        const formattedDate = new Date(post.timestamp).toLocaleDateString('ko-KR', {
+        const formattedDate = new Date(post.submittedAt).toLocaleDateString('ko-KR', {
             month: 'short',
             day: 'numeric'
         });
 
         // 본문 미리보기 포맷팅
-        const contentPreview = post.content 
-            ? (post.content.length > 150 ? post.content.substring(0, 150) + '...' : post.content)
+        const contentPreview = post.textContent 
+            ? (post.textContent.length > 150 ? post.textContent.substring(0, 150) + '...' : post.textContent)
             : '설명 없음';
 
         // 게시글 데이터를 템플릿에 업데이트한다.
-        const authorName = article.querySelector('.post-author-info .author-name');
+        // const authorName = article.querySelector('.post-author-info .author-name');
         const titleLink = article.querySelector('.post-title a');
         const subtitleDiv = article.querySelector('.post-subtitle');
         const dateSpan = article.querySelector('.post-meta .meta-item span');
         const heartIcon = article.querySelector('.heart-icon');
 
-        // 글쓴이 설정
-        if (authorName) {
-            authorName.textContent = post.createdBy;
-        }
+        // // 글쓴이 설정
+        // if (authorName) {
+        //     authorName.textContent = post.createdBy;
+        // }
 
         // 제목 링크 설정
         if (titleLink) {
-            titleLink.href = post.sourceUrl || `/posts/${post.id}`;
+            titleLink.href = post.originalUrl || `/posts/${post.postId}`;
             titleLink.textContent = post.title;
-            titleLink.setAttribute('data-post-id', post.id);
+            titleLink.setAttribute('data-post-id', post.postId);
         }
 
         // 본문 미리보기 설정
@@ -90,25 +93,25 @@ class InfiniteScrollFeedController {
 
         // 좋아요 버튼 data-post-id 설정
         if (heartIcon) {
-            heartIcon.setAttribute('data-post-id', post.id);
+            heartIcon.setAttribute('data-post-id', post.postId);
         }
 
         // 아코디언 설정 (summary가 있는 경우)
-        if (post.summary) {
+        if (post.generatedSummary) {
             const accordionSection = article.querySelector('.accordion-section');
             const accordionSummary = article.querySelector('.accordion-summary');
             const viewFullBtn = article.querySelector('.view-full-btn');
             
             if (accordionSection) {
-                accordionSection.setAttribute('data-post-id', post.id);
+                accordionSection.setAttribute('data-post-id', post.postId);
             }
             
             if (accordionSummary) {
-                accordionSummary.textContent = post.summary;
+                accordionSummary.textContent = post.generatedSummary;
             }
             
-            if (viewFullBtn && post.sourceUrl) {
-                viewFullBtn.href = post.sourceUrl;
+            if (viewFullBtn && post.originalUrl) {
+                viewFullBtn.href = post.originalUrl;
             }
         } else {
             // summary가 없으면 아코디언 섹션 제거
@@ -135,15 +138,22 @@ class InfiniteScrollFeedController {
     // }
 
     async loadMorePosts() {
+        
         if (this.isLoading || !this.hasMore) return;
 
         this.isLoading = true;
         this.showLoadingIndicator();
 
         try {
+            if (!this.feedSlug) {
+                console.error('feed 정보가 없습니다. 추천 게시글을 불러올 수 없습니다.');
+                this.hasMore = false;
+                return;
+            }
+
             const excludeIds = Array.from(this.loadedPostIds);
             const response = await fetch(
-                `/api/posts/recommendations?page=${this.currentPage}&limit=5&exclude=${excludeIds.join(',')}`
+                `/api/feeds/${this.feedSlug}/recommendations?limit=5&exclude=${excludeIds.join(',')}`
             );
 
             if (!response.ok) {
@@ -171,10 +181,10 @@ class InfiniteScrollFeedController {
 
     renderPosts(posts) {
         posts.forEach(post => {
-            if (!this.loadedPostIds.has(post.id)) {
+            if (!this.loadedPostIds.has(post.postId)) {
                 const postElement = this.createPostElement(post);
                 this.postsContainer.appendChild(postElement);
-                this.loadedPostIds.add(post.id);
+                this.loadedPostIds.add(post.postId);
             }
         });
         // scrollTarget을 리스트의 마지막으로 이동
@@ -254,23 +264,7 @@ function toggleLike(postId, heartIcon) {
         });
 }
 
-function logUserVisitedPost(postId) {
-    
-    fetch(`/api/posts/${postId}/viewed`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('게시글 열람이력 추적에 실패했습니다.');
-        }
-    })
-    .catch(error => {
-        console.error('게시글 열람이력 기록 중 오류가 발생했습니다:', error);
-    });
-}
+
 
 function deletePost(postId) {
     if (confirm('게시글을 삭제하시겠습니까?')) {
@@ -299,6 +293,8 @@ function toggleAccordion(clickedAccordion) {
     clickedAccordion.classList.toggle('expanded');
 }
 
+
+
 document.addEventListener('DOMContentLoaded', function() {
 
     const postsList = document.querySelector('.posts-list');
@@ -309,8 +305,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
+    // feedSlug를 content-container에서 가져온다.
+    const contentContainer = document.querySelector('.content-container');
+    const feedSlug = contentContainer ? contentContainer.getAttribute('data-feed-slug') : null;
+    
     // 무한 스크롤 컨트롤러를 intersection observer에 연결한다.
-    const feedController = new InfiniteScrollFeedController();
+    const feedController = new InfiniteScrollFeedController(feedSlug);
     
     const scrollObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {

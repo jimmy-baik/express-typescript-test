@@ -198,7 +198,14 @@ async function ingestRSSFeedArticles(
 
     try {
       let extractedContent: ExtractedContent;
-      const fullyQualifiedSourceUrl = rootUrl + item.link;
+      let fullyQualifiedSourceUrl: string;
+
+      // 링크가 상대 경로인 경우 절대경로를 붙여서 저장
+      if (item.link.startsWith(rootUrl)) {
+        fullyQualifiedSourceUrl = item.link;
+      } else {
+        fullyQualifiedSourceUrl = rootUrl + item.link;
+      }
 
       const existingPost = await postsRepository.getPostByOriginalUrl(fullyQualifiedSourceUrl);
       if (existingPost) {

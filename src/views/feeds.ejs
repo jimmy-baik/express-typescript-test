@@ -21,7 +21,7 @@
                         <div class="feed-card">
                             <div class="feed-header">
                                 <div class="feed-title-section">
-                                    <h2 class="feed-title"><%= feed.title %></h2>
+                                    <a class="feed-title" href="/feeds/<%= feed.slug %>" data-feed-id="<%= feed.feedId %>"><%= feed.title %></a>
                                     <div class="feed-meta">
                                         <svg class="people-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -45,7 +45,7 @@
                                                 </div> -->
                                                 <% if (post.title) { %>
                                                     <h3 class="post-title">
-                                                        <a href="<%= post.originalUrl || '#' %>" target="_blank" rel="noopener noreferrer"><%= post.title %></a>
+                                                        <a href="<%= post.originalUrl || '#' %>" target="_blank" rel="noopener noreferrer" data-post-id="<%= post.postId %>"><%= post.title %></a>
                                                     </h3>
                                                 <% } %>
                                                 <% if (post.textContent) { %>
@@ -89,5 +89,23 @@
         </div>
     </main>
 </body>
+<script src="/js/user-engagements.mjs" type="module"></script>
+<script>
+    // 게시글 열람이력 추적
+    document.addEventListener('DOMContentLoaded', function() {
+        const feedsList = document.querySelector('.feeds-list');
+        if (feedsList) {
+            feedsList.addEventListener('click', function(e) {
+                const postLink = e.target.closest('a[data-post-id]');
+                if (postLink) {
+                    const postId = postLink.getAttribute('data-post-id');
+                    if (postId) {
+                        logUserVisitedPost(postId);
+                    }
+                }
+            });
+        }
+    });
+</script>
 </html>
 

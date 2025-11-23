@@ -78,13 +78,15 @@ body {
 
 .feed-title-section {
     flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 18px;
 }
 
 .feed-title {
     font-size: 24px;
     font-weight: 700;
     color: #000000;
-    margin-bottom: 8px;
 }
 
 .feed-meta {

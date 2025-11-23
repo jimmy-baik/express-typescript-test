@@ -48,6 +48,15 @@ body {
     gap: 32px;
 }
 
+/* 2-column layout for wide desktop screens */
+@media (min-width: 1024px) {
+    .feeds-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 32px;
+    }
+}
+
 .feed-card {
     background: #ffffff;
     border: 1px solid #e6e6e6;

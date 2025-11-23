@@ -1,135 +1,131 @@
-import { readFile, readdir, writeFile, rm } from 'node:fs/promises';
-import path from 'node:path';
-import type { Post } from '@models/posts';
+import type { Post, FeedPost } from '@models/posts';
 import { opensearchClient, OPENSEARCH_INDEX_NAME } from '@adapters/secondary/opensearch';
+import db from '@adapters/secondary/db/client';
+import { postsTable, feedPostsTable } from '@adapters/secondary/db/schema';
+import { eq, and, inArray, desc } from 'drizzle-orm';
+import { dateToUnixTimestamp, getUnixTimestamp, unixTimestampToDate } from '@system/timezone';
 
-export interface IPostRepository {
-    getAllPosts(): Promise<Array<Post>|null>;
-    getPost(postId: string): Promise<Post|null>;
-    createPost(post: Post): Promise<string>;
-    deletePost(postId: string): Promise<boolean>;
-}
+export class PostRepository {
+    private db: typeof db;
+    private searchEngine: typeof opensearchClient;
 
-
-export class FilesystemPostRepository implements IPostRepository {
-    private dataDirectoryPath: string;
-
-    constructor(dataDirectoryPath: string) {
-        this.dataDirectoryPath = dataDirectoryPath;
+    constructor(dbClient: typeof db, searchEngineClient: typeof opensearchClient) {
+        this.db = dbClient;
+        this.searchEngine = searchEngineClient;
     }
 
-    async getAllPosts(): Promise<Array<Post>|null> {
-        // directory 내의 파일을 모두 불러온다
+    async getPostByOriginalUrl(originalUrl: string): Promise<Post|null> {
+        const post = await this.db.select().from(postsTable).where(eq(postsTable.originalUrl, originalUrl)).limit(1).get();
+        return post ? this.toDomainPost(post) : null;
+    }
 
-        const allFiles = await readdir(this.dataDirectoryPath);
+    async getPostByPostId(postId: number): Promise<Post|null> {
+        const post = await this.db.select().from(postsTable).where(eq(postsTable.postId, postId)).limit(1).get();
+        return post ? this.toDomainPost(post) : null;
+    }
 
-        if (allFiles.length < 1) {
+    async getPostsByPostIds(postIds: number[]): Promise<Post[]> {
+        const posts = await this.db.select().from(postsTable).where(inArray(postsTable.postId, postIds));
+        return posts.map(this.toDomainPost);
+    }
+
+    async getPostInFeed(feedId: number, postId:number): Promise<FeedPost|null> {
+        const feedPost = await this.db.select().from(feedPostsTable)
+        .innerJoin(postsTable, eq(feedPostsTable.postId, postsTable.postId))
+        .where(and(eq(feedPostsTable.feedId, feedId), eq(feedPostsTable.postId, postId))).limit(1).get();
+
+        if (!feedPost) {
             return null;
         }
 
-        // json 파일만 남긴다
-        const jsonFiles = allFiles.filter(file => file.toLowerCase().endsWith('.json'));
+        return this.toDomainFeedPost(feedPost.feed_posts, feedPost.posts);
+    }
 
-        if (jsonFiles.length < 1) {
-            return null;
-        }
+    async getAllPostsInFeed(feedId: number, limit: number|null = null): Promise<FeedPost[]> {
+        const baseQuery = this.db.select().from(feedPostsTable)
+            .innerJoin(postsTable, eq(feedPostsTable.postId, postsTable.postId))
+            .where(eq(feedPostsTable.feedId, feedId)).orderBy(desc(feedPostsTable.submittedAt));
         
-        // json 내용물을 읽어서 Post 데이터로 mapping한다.
-        const data:Post[] = await Promise.all(
-            jsonFiles.map(async (filename) => {
-                const filePath = path.join(this.dataDirectoryPath, filename);
-                const fileContent = await readFile(filePath, 'utf-8');
-                const jsonData = JSON.parse(fileContent);
-                return {
-                    id: jsonData.id,
-                    timestamp: new Date(jsonData.timestamp),
-                    title: jsonData.title,
-                    content: jsonData.content,
-                    createdBy: jsonData.createdBy,
-                    summary: jsonData.summary,
-                    embedding: jsonData.embedding,
-                    sourceUrl: jsonData.sourceUrl
-                }
-            })
-        );
+        // limit이 null이면 모든 게시글을 조회, 아니면 limit만큼 조회
+        const feedPosts = limit === null ? await baseQuery.all() : await baseQuery.limit(limit).all();
 
-        // 오름차순 정렬해서 반환
-        const sortedData = data.sort((a,b) => {return a.timestamp.getTime() - b.timestamp.getTime()});
-
-        return sortedData;
+        return feedPosts.map(feedPost => this.toDomainFeedPost(feedPost.feed_posts, feedPost.posts));
     }
 
-    async getPost(postId: string): Promise<Post|null> {
-        try {
-            const filePath = path.join(this.dataDirectoryPath, postId + '.json');
-            const fileContent = await readFile(filePath, 'utf-8');
-            const jsonData = JSON.parse(fileContent);
-            return {
-                id: jsonData.id,
-                timestamp: new Date(jsonData.timestamp),
-                title: jsonData.title,
-                content: jsonData.content,
-                createdBy: jsonData.createdBy,
-                summary: jsonData.summary,
-                embedding: jsonData.embedding,
-                sourceUrl: jsonData.sourceUrl
-            }
-        } catch (err) {
-            console.log(err);
-            return null;
-        }
+    async createPost(
+        originalUrl: string,
+        textContent: string,
+        htmlContent: string | null,
+        title: string | null,
+        generatedSummary: string | null,
+        embedding: number[] | null
+    ): Promise<Post> {
+
+        const newPost = await this.db.insert(postsTable).values({
+            createdAt: getUnixTimestamp(),
+            originalUrl: originalUrl,
+            textContent: textContent,
+            htmlContent: htmlContent,
+            title: title,
+            generatedSummary: generatedSummary,
+            embedding: embedding ? JSON.stringify(embedding) : null
+        }).returning().get();
+
+        return this.toDomainPost(newPost);
     }
 
-    async createPost(post: Post): Promise<string> {
+    async createFeedToPostRelationship(feedId: number, postId:number, ownerUserId:number): Promise<void> {
 
-        const fileName = post.id + '.json';
-        const filePath = path.join(this.dataDirectoryPath, fileName);
-        const jsonString = JSON.stringify(post);
-        await writeFile(filePath, jsonString);
 
-        // OpenSearch 인덱스에 추가
-        try {
-            const opensearchPayload: any = {
-                id: post.id,
-                timestamp: post.timestamp instanceof Date ? post.timestamp.toISOString() : post.timestamp, // Date 타입을 ISO 문자열로 변환
-                title: post.title,
-                content: post.content,
-                createdBy: post.createdBy,
-                summary: post.summary,
-                sourceUrl: post.sourceUrl
-            };
-            if (post.embedding && Array.isArray(post.embedding)) {
-                opensearchPayload.embedding = post.embedding;
-            }
-            await opensearchClient.index({
-                index: OPENSEARCH_INDEX_NAME,
-                id: post.id,
-                body: opensearchPayload
-            });
-        } catch (err) {
-            console.log('OpenSearch 인덱스 추가 실패:', err);
+        const submittedAt = new Date();
+        await this.db.insert(feedPostsTable).values({
+            feedId: feedId,
+            postId: postId,
+            ownerUserId: ownerUserId,
+            submittedAt: dateToUnixTimestamp(submittedAt),
+        });
+
+        const post = await this.getPostByPostId(postId);
+        if (!post) {
+            throw new Error('게시글을 찾을 수 없습니다.');
         }
 
-        return post.id;
-
-    }
-
-    async deletePost(postId:string): Promise<boolean> {
-
-        const fileName = postId + '.json';
-        const filePath = path.join(this.dataDirectoryPath, fileName);
-        await rm(filePath);
-
-        try {
-            await opensearchClient.delete({
-                index: OPENSEARCH_INDEX_NAME,
-                id: postId
-            });
-        } catch (err) {
-            console.log('OpenSearch 문서 삭제 실패:', err);
+        const searchDocument = {
+            ...post,
+            feedId: feedId,
+            submittedAt: dateToUnixTimestamp(submittedAt),
+            ownerUserId: ownerUserId,
         }
 
-        return true;
+        await this.searchEngine.index({
+            index: OPENSEARCH_INDEX_NAME,
+            body: searchDocument
+        });
     }
 
+    private toDomainPost(post: typeof postsTable.$inferSelect): Post {
+        return {
+            ...post,
+            createdAt: unixTimestampToDate(post.createdAt),
+            embedding: post.embedding ? JSON.parse(post.embedding) : null
+        };
+    }
+
+    private toDBPost(post: Post): typeof postsTable.$inferInsert {
+        return {
+            ...post,
+            createdAt: dateToUnixTimestamp(post.createdAt),
+            embedding: post.embedding ? JSON.stringify(post.embedding) : null,
+        };
+    }
+
+    private toDomainFeedPost(feedPostRelationship: typeof feedPostsTable.$inferSelect, post: typeof postsTable.$inferSelect): FeedPost {
+        return {
+            ...feedPostRelationship,
+            ...post,
+            createdAt: unixTimestampToDate(post.createdAt),
+            submittedAt: unixTimestampToDate(feedPostRelationship.submittedAt),
+            embedding: post.embedding ? JSON.parse(post.embedding) : null
+        };
+    }
 }

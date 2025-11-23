@@ -1,103 +1,109 @@
-import { readFile, readdir, writeFile, rm } from 'node:fs/promises';
-import path from 'node:path';
 import bcrypt from 'bcrypt';
-import type { User } from '../models/users';
+import type { User, UserInteractionHistory } from '@models/users';
+import { UserInteractionType } from '@models/users';
+import db from '@adapters/secondary/db/client';
+import { usersTable, userPostInteractionsTable } from '@adapters/secondary/db/schema';
+import { eq } from 'drizzle-orm';
+import { getUnixTimestamp, unixTimestampToDate } from '@system/timezone';
 
 
-function isAsciiCharactersOnly(str: string): boolean {
-    return /^[\x00-\x7F]*$/.test(str);
-}
+export class UserRepository {
+    private db: typeof db;
 
-export class FilesystemUserRepository {
-    private dataDirectoryPath: string;
-
-    constructor(dataDirectoryPath: string) {
-        this.dataDirectoryPath = dataDirectoryPath;
+    constructor(dbClient: typeof db) {
+        this.db = dbClient;
     }
 
-    async getUser(username: string): Promise<User|null> {
-        try {
-            const filePath = path.join(this.dataDirectoryPath, username + '.json');
-            const fileContent = await readFile(filePath, 'utf-8');
-            const jsonData = JSON.parse(fileContent);
-            return {
-                username: jsonData.username,
-                hashedPassword: jsonData.hashedPassword,
-                likedPosts: jsonData.likedPosts,
-                viewedPosts: jsonData.viewedPosts,
-                userEmbedding: jsonData.userEmbedding
-            }
-        } catch (err) {
-            console.log(err);
+    async getUser(userId: number): Promise<User|null> {
+        const user = await this.db.select().from(usersTable).where(eq(usersTable.userId, userId)).limit(1).get();
+        if (user === undefined) {
             return null;
         }
+        return this.toDomainUser(user);
     }
 
-    async createUser(username: string, password: string): Promise<User> {
-
-        if (!isAsciiCharactersOnly(username)) {
-            throw new Error('Username은 ASCII 문자만 포함할 수 있습니다.');
+    async getUserByUsername(username: string): Promise<User|null> {
+        const user = await this.db.select().from(usersTable).where(eq(usersTable.username, username)).limit(1).get();
+        if (user === undefined) {
+            return null;
         }
+        return this.toDomainUser(user);
+    }
 
-        const existingUser = await this.getUser(username);
-        if (existingUser) {
-            throw new Error('사용할 수 없는 username입니다.');
-        }
+    async getUserInteractionHistory(userId: number): Promise<UserInteractionHistory> {
+        const userInteractions = await this.db.select().from(userPostInteractionsTable).where(eq(userPostInteractionsTable.userId, userId)).all();
+        return this.toDomainUserInteractionHistory(userInteractions);
+    }
 
+    async createUser(username: string, password: string, fullname: string | null): Promise<User> {
         const hashedPassword = await bcrypt.hash(password, 10);
+        const createdAt = getUnixTimestamp();
+        const newUser = await this.db.insert(usersTable).values({
+            username,
+            fullname,
+            hashedPassword,
+            createdAt,
+        }).returning().get();
 
-        const user = {
-            username: username,
-            hashedPassword: hashedPassword,
-            likedPosts: [],
-            viewedPosts: [],
-            userEmbedding: null
-        }
-
-        const fileName = user.username + '.json';
-        const filePath = path.join(this.dataDirectoryPath, fileName);
-        const jsonString = JSON.stringify(user);
-        await writeFile(filePath, jsonString);
-        return user;
-    }
-    
-    async likePost(username: string, postId: string): Promise<string[]> {
-        const user = await this.getUser(username);
-        if (!user) {
-            throw new Error('사용자를 찾을 수 없습니다.');
-        }
-        user.likedPosts.push(postId);
-        const fileName = user.username + '.json';
-        const filePath = path.join(this.dataDirectoryPath, fileName);
-        const jsonString = JSON.stringify(user);
-        await writeFile(filePath, jsonString);
-        return user.likedPosts;
+        return this.toDomainUser(newUser);
     }
 
-    async viewPost(username: string, postId: string): Promise<string[]> {
-        const user = await this.getUser(username);
-        if (!user) {
-            throw new Error('사용자를 찾을 수 없습니다.');
-        }
-        user.viewedPosts.push(postId);
-        const fileName = user.username + '.json';
-        const filePath = path.join(this.dataDirectoryPath, fileName);
-        const jsonString = JSON.stringify(user);
-        await writeFile(filePath, jsonString);
-        return user.viewedPosts;
+    async likePost(userId: number, postId: number): Promise<number> {
+        const createdAt = getUnixTimestamp();
+        const like = await this.db.insert(userPostInteractionsTable).values({
+            userId,
+            postId,
+            interactionType: UserInteractionType.LIKE,
+            createdAt
+        }).returning().get();
+        return like.id;
     }
 
-    async updateUserEmbedding(username: string, embedding: number[]): Promise<number[]> {
-        const user = await this.getUser(username);
-        if (!user) {
-            throw new Error('사용자를 찾을 수 없습니다.');
+    async viewPost(userId: number, postId: number): Promise<number> {
+        const createdAt = getUnixTimestamp();
+        const view = await this.db.insert(userPostInteractionsTable).values({
+            userId,
+            postId,
+            interactionType: UserInteractionType.VIEW,
+            createdAt
+        }).returning().get();
+        return view.id;
+    }
+
+    async updateUserEmbedding(userId: number, embedding: number[]): Promise<void> {
+        const updatedUserResult = await this.db.update(usersTable).set({
+            userEmbedding: JSON.stringify(embedding),
+        }).where(eq(usersTable.userId, userId));
+        
+        if (updatedUserResult.rowsAffected < 1) {
+            throw new Error('user embedding 업데이트 실패');
         }
-        user.userEmbedding = embedding;
-        const fileName = user.username + '.json';
-        const filePath = path.join(this.dataDirectoryPath, fileName);
-        const jsonString = JSON.stringify(user);
-        await writeFile(filePath, jsonString);
-        return user.userEmbedding;
+    }
+
+    private toDomainUser(user: typeof usersTable.$inferSelect): User {
+        return {
+            ...user,
+            createdAt: unixTimestampToDate(user.createdAt),
+            userEmbedding: user.userEmbedding ? JSON.parse(user.userEmbedding) : null,
+        };
+    }
+
+    private toDomainUserInteractionHistory(userInteractions: typeof userPostInteractionsTable.$inferSelect[]): UserInteractionHistory {
+        const likedPostIds:number[] = [];
+        const viewedPostIds:number[] = [];
+
+        for (const interaction of userInteractions) {
+            if (interaction.interactionType === UserInteractionType.LIKE) {
+                likedPostIds.push(interaction.postId);
+            } else if (interaction.interactionType === UserInteractionType.VIEW) {
+                viewedPostIds.push(interaction.postId);
+            }
+        }
+
+        return {
+            likedPostIds : likedPostIds,
+            viewedPostIds : viewedPostIds
+        };
     }
 
 }

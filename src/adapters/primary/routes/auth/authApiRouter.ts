@@ -5,7 +5,7 @@ const router = express.Router();
 
 // 로그인 처리
 router.post('/login', passport.authenticate('local', {
-    successRedirect: '/posts', 
+    successRedirect: '/feeds', 
     failureRedirect: '/login'
 }));
 
@@ -16,7 +16,7 @@ router.get('/kakao', passport.authenticate('kakao'));
 
 // 카카오 로그인 콜백 처리
 router.get('/kakao/callback', passport.authenticate('kakao', {
-    successRedirect: '/posts', 
+    successRedirect: '/feeds', 
     failureRedirect: '/login'
 }));
 

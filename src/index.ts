@@ -8,17 +8,18 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-
-import { FilesystemUserRepository } from '@repositories/userRepository';
+import db from '@adapters/secondary/db/client';
+import { UserRepository } from '@repositories/userRepository';
 import { initializeOpenSearch } from '@adapters/secondary/opensearch';
 
 // View 경로 (HTML 웹페이지를 반환)
 import authViewRouter from '@adapters/primary/routes/auth/authViewRouter';
-import postsViewRouter from '@adapters/primary/routes/posts/postsViewRouter';
+import feedsViewRouter from '@adapters/primary/routes/feeds/feedsViewRouter';
 
 // API 경로 (JSON 응답을 반환)
 import authApiRouter from '@adapters/primary/routes/auth/authApiRouter';
 import usersApiRouter from '@adapters/primary/routes/users/usersApiRouter';
+import feedsApiRouter from '@adapters/primary/routes/feeds/feedsApiRouter';
 import postsApiRouter from '@adapters/primary/routes/posts/postsApiRouter';
 
 
@@ -71,8 +72,7 @@ initializeOpenSearch().catch((err) => {
 });
 
 // 유저 Repository 설정
-const usersDirectory = './src/data/users';
-const usersRepository = new FilesystemUserRepository(usersDirectory);
+const usersRepository = new UserRepository(db);
 
 
 // passport 설정
@@ -86,7 +86,7 @@ passport.use(new LocalStrategy({
 }, async (username, password, done) => { // verify 함수
     try {
 
-        const user = await usersRepository.getUser(username);
+        const user = await usersRepository.getUserByUsername(username);
         if (!user) {
             return done(null, false);
         }
@@ -111,13 +111,13 @@ passport.use(new KakaoStrategy({
     callbackURL: KAKAO_CALLBACK_URL
 }, async (accessToken, refreshToken, profile, done) => {
     try {
-        const user = await usersRepository.getUser(profile.id);
+        const user = await usersRepository.getUserByUsername(profile.id);
         if (user) {
             // 사용자가 있으면 바로 반환
             return done(null, user);
         } else {
             // 사용자가 없으면 새로 생성 후 반환
-            const newUser = await usersRepository.createUser(profile.id, String(randomUUID()));
+            const newUser = await usersRepository.createUser(profile.id, String(randomUUID()), null);
             return done(null, newUser);
         }
     } catch (err) {
@@ -127,36 +127,40 @@ passport.use(new KakaoStrategy({
 
 
 passport.serializeUser((user, done) => {
-    if ('username' in user && user.username !== undefined) {
-        done(null, user.username);
+    if ('userId' in user && user.userId !== undefined) {
+        done(null, user.userId);
     } else {
         done(new Error('정상적인 User 객체가 아닙니다.'));
     }
 });
 
-passport.deserializeUser(async (username: string, done) => {
+passport.deserializeUser(async (userId: number, done) => {
     try {
-        const user = await usersRepository.getUser(username);
+        const user = await usersRepository.getUser(userId);
+        if (!user) {
+            throw new Error('사용자를 찾을 수 없습니다.');
+        }
+
         done(null, user);
     } catch (err) {
         done(err);
     }
 });
 
-// 기본 라우트
+// 기본 경로 등록
 app.get('/', (req, res) => {
     res.render('index', { title: 'Smallfeed - 내가 직접 만드는 우리만의 피드' });
 });
 
-
-// View 경로 (HTML 웹페이지를 반환)
+// View 경로 등록
 app.use('/', authViewRouter);
-app.use('/posts', postsViewRouter);
+app.use('/feeds', feedsViewRouter);
 
 
-// API 경로 (JSON 응답)
+// API 경로 등록
 app.use('/api/auth', authApiRouter);
 app.use('/api/users', usersApiRouter);
+app.use('/api/feeds', feedsApiRouter);
 app.use('/api/posts', postsApiRouter);
 
 

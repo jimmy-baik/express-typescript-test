@@ -1,5 +1,6 @@
 src/data/posts/*
 src/data/users/*
+*.db
 
 # custom ignores
 dist

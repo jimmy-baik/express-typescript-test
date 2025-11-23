@@ -1,5 +1,5 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
+  "include": ["src/**/*"],
   "compilerOptions": {
     // File Layout
     "rootDir": "./src",
@@ -20,6 +20,7 @@
       "@models/*": ["./src/models/*"],
       "@services/*": ["./src/services/*"],
       "@adapters/*": ["./src/adapters/*"],
+      "@system/*": ["./src/system/*"],
     },
 
 
@@ -51,5 +52,6 @@
 
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-  }
+  },
+  
 }

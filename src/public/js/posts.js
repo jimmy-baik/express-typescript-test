@@ -181,10 +181,10 @@ class InfiniteScrollFeedController {
 
     renderPosts(posts) {
         posts.forEach(post => {
-            if (!this.loadedPostIds.has(post.id)) {
+            if (!this.loadedPostIds.has(post.postId)) {
                 const postElement = this.createPostElement(post);
                 this.postsContainer.appendChild(postElement);
-                this.loadedPostIds.add(post.id);
+                this.loadedPostIds.add(post.postId);
             }
         });
         // scrollTarget을 리스트의 마지막으로 이동

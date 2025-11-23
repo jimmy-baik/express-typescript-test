@@ -16,15 +16,17 @@ export async function ingestContent(url:string, feedId: number, userId: number, 
     await ingestRSSFeedArticles(url, feedId, userId, postsRepository);
     return;
   }
+
+  // 먼저 유튜브 video id를 추출할 수 있는지 확인한다. video id를 추출할 수 있는 경우 정해진 형식대로 url을 정규화한다. (중복 검사하기 전 패턴을 하나로 일치시킨다)
   const videoId = parseYoutubeVideoId(url);
   if (videoId) {
     url = normalizeYoutubeVideoUrl(videoId);
   }
 
-  // 이미 존재하는 post인지 확인한다.
+  // 중복 검사 - 이미 존재하는 post인지 확인한다.
   let post: Post|null = await postsRepository.getPostByOriginalUrl(url);
 
-  // 존재하지 않는 post인 경우에는 먼저 추출해서 저장한다.
+  // 새로운 post인 경우에는 먼저 추출해서 저장한다.
   if (!post) {
     let extractedContent: ExtractedContent;
     if (videoId) {

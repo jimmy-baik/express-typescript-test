@@ -31,7 +31,7 @@ router.get('/',
             // 각 피드에 대해 최근 3개의 게시글을 가져옴
             const feedsWithPosts = await Promise.all(
                 feeds.map(async (feed) => {
-                    const posts = await postsRepository.getAllPostsInFeed(feed.feedId, 3);
+                    const posts = await postsRepository.getAllPostsInFeed(feed.feedId, 3).catch(err => []);
                     return {
                         ...feed,
                         posts: posts
@@ -43,6 +43,18 @@ router.get('/',
                 title: '피드 목록',
                 feeds: feedsWithPosts
             });
+        } catch (err) {
+            next(err);
+        }
+    }
+);
+
+// 새 피드 작성 페이지
+router.get('/new',
+    requireLogin,
+    async (req, res, next) => {
+        try {
+            res.render('new-feed', {title: '피드 추가하기'});
         } catch (err) {
             next(err);
         }
@@ -66,6 +78,7 @@ router.get('/:feedSlug',
 
           // 이전에 계산되었던 user embedding이 있으면 user embedding을 이용해서 추천 아티클을 검색한다. 없으면 최신순으로 불러온다.
           const postsPromise = user.userEmbedding ? searchPostsInFeedByEmbedding(user.userEmbedding, feed.feedId) : postsRepository.getAllPostsInFeed(feed.feedId);
+          postsPromise.catch(err => []);
           const userInteractionHistoryPromise = usersRepository.getUserInteractionHistory(user.userId);
 
           const [posts, userInteractionHistory] = await Promise.all([postsPromise, userInteractionHistoryPromise]);

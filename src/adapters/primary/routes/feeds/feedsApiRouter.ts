@@ -38,10 +38,10 @@ router.post('/',
     requireLogin,
     async (req, res, next) => {
     try {
-        if (!req.body || !req.body.title || !req.body.slug) {
+        if (!req.body || !req.body.title) {
             return res.status(400).json({
                 error: '잘못된 요청입니다.',
-                message: '제목과 고유 주소를 입력해주세요.'
+                message: '제목을 입력해주세요.'
             });
         }
 
@@ -49,7 +49,8 @@ router.post('/',
         const title = String(req.body.title);
         const slug = generateRandomString(10); // 10자리의 랜덤 문자열을 생성해서 url slug로 사용한다
         const feed = await feedsRepository.createFeed(title, slug, userId);
-        res.status(201).json(feed);
+        // 피드 목록으로 리다이렉트
+        res.redirect(`/feeds`);
     }
     catch (err) {
         next(err);

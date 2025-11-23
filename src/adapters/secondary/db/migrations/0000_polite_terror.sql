@@ -50,7 +50,7 @@ CREATE TABLE `posts` (
 	`post_id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`created_at` integer NOT NULL,
 	`original_url` text NOT NULL,
-	`textContent` text NOT NULL,
+	`text_content` text NOT NULL,
 	`html_content` text,
 	`title` text,
 	`generated_summary` text,

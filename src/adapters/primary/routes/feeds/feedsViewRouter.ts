@@ -83,7 +83,12 @@ router.get('/:feedSlug',
 
           const [posts, userInteractionHistory] = await Promise.all([postsPromise, userInteractionHistoryPromise]);
 
-          res.render('posts', {title: '게시글 목록', posts: posts, userLikedPosts: userInteractionHistory.likedPostIds});
+          res.render('posts', {
+            title: '게시글 목록', 
+            posts: posts, 
+            userLikedPosts: userInteractionHistory.likedPostIds,
+            feedSlug: req.params.feedSlug
+          });
 
         }
     catch (err) {
@@ -96,7 +101,7 @@ router.get('/:feedSlug/new-url',
     requireLogin,
     async (req, res, next) => {
     try {
-        res.render('new-url', {title: '컨텐츠 추가하기'});
+        res.render('new-url', {title: '컨텐츠 추가하기', feedSlug: String(req.params.feedSlug)});
     } catch (err) {
         next(err);
     }

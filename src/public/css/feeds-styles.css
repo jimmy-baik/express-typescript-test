@@ -110,6 +110,24 @@ body {
     flex-direction: column;
     gap: 24px;
     margin-bottom: 24px;
+    position: relative;
+    padding-left: 32px;
+}
+
+/* Timeline vertical line with fade out effect */
+.feed-posts::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, 
+        #e6e6e6 0%, 
+        #e6e6e6 70%, 
+        rgba(230, 230, 230, 0.6) 85%, 
+        rgba(230, 230, 230, 0.3) 95%, 
+        transparent 100%);
 }
 
 .post-item {
@@ -120,6 +138,22 @@ body {
     background: #f9f9f9;
     border-radius: 8px;
     border: 1px solid #f0f0f0;
+    position: relative;
+}
+
+/* Timeline dot at post title */
+.post-item::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 24px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #292929;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 2px #e6e6e6;
+    z-index: 1;
 }
 
 .post-content {
@@ -205,6 +239,23 @@ body {
     font-weight: 500;
     transition: background-color 0.2s ease;
     text-align: center;
+    position: relative;
+    margin-left: 32px;
+}
+
+/* Timeline line extension to "더 보기" button */
+.view-more-btn::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, 
+        rgba(230, 230, 230, 0.3) 0%, 
+        rgba(230, 230, 230, 0.1) 50%, 
+        transparent 100%);
 }
 
 .view-more-btn:hover {
@@ -295,8 +346,31 @@ body {
         font-size: 20px;
     }
 
+    .feed-posts {
+        padding-left: 28px;
+    }
+
+    .feed-posts::before {
+        left: 12px;
+    }
+
     .post-item {
         padding: 12px;
+    }
+
+    .post-item::before {
+        left: -22px;
+        top: 20px;
+        width: 8px;
+        height: 8px;
+    }
+
+    .view-more-btn {
+        margin-left: 28px;
+    }
+
+    .view-more-btn::before {
+        left: -22px;
     }
 
     .create-feed-section {

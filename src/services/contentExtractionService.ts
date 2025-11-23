@@ -197,6 +197,20 @@ async function ingestRSSFeedArticles(
     try {
       let extractedContent: ExtractedContent;
       const fullyQualifiedSourceUrl = rootUrl + item.link;
+
+      const existingPost = await postsRepository.getPostByOriginalUrl(fullyQualifiedSourceUrl);
+      if (existingPost) {
+        console.log(`RSS feed 아티클이 이미 존재하므로 컨텐츠 로딩을 건너뜁니다: ${item.title}`);
+
+        const existingPostInFeed = await postsRepository.getPostInFeed(feedId, existingPost.postId);
+        if (existingPostInFeed === null) {
+          // 원본 컨텐츠가 이미 저장되어 있지만 현재 feed에는 없었을 경우 현재 feed와 post의 관계만 새로 추가한다.
+          await postsRepository.createFeedToPostRelationship(feedId, existingPost.postId, ownerUserId);
+        }
+
+        continue;
+      }
+
       // feed에서 가져온 메타데이터로 바로 Post 객체를 생성할 수 있다면 바로 변환한다
       if (item.title && item.pubDate && item.content) {
         console.log(`RSS feed 아티클 메타데이터로 바로 변환: ${item.title}`);

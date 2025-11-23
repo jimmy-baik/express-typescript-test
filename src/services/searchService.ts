@@ -4,6 +4,7 @@ import { User } from '@models/users';
 import { Feed } from '@models/feeds';
 import { PostRepository } from '@repositories/postRepository';
 import { UserRepository } from '@repositories/userRepository';
+import { unixTimestampToDate, UtcToKst } from '@system/timezone';
 
 export async function searchPostsInFeedByKeyword(userQuery: string, feedId: number) {
 
@@ -313,7 +314,7 @@ function filterUniqueSearchResults(opensearchResponse: any) : Post[] {
       .sort((a: any, b: any) => b._score - a._score)
       .map((h: any) => ({
         postId: h._source.postId,
-        createdAt: h._source.createdAt,
+        submittedAt: unixTimestampToDate(h._source.submittedAt),
         originalUrl: h._source.originalUrl,
         textContent: h._source.textContent,
         htmlContent: null,

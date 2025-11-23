@@ -57,21 +57,6 @@ router.post('/',
 });
 
 
-// 내 피드 조회
-router.get('/my-feeds',
-    requireLogin,
-    async (req, res, next) => {
-    try {
-        const userId = (req.user as User).userId;
-        const feeds = await feedsRepository.getAllFeedsByUserId(userId);
-        res.status(200).json(feeds);
-    }
-    catch (err) {
-        next(err);
-    }
-});
-
-
 // 피드 내 추천 게시글 조회
 router.get('/:feedSlug/recommendations',
     requireLogin,

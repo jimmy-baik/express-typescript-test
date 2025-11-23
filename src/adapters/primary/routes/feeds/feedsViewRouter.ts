@@ -49,15 +49,14 @@ router.get('/',
     }
 );
 
-// 피드의 컨텐츠 목록 조회
+// 단일 피드 조회 (피드의 최초 추천 게시글 열람)
 router.get('/:feedSlug',
     requireLogin,
     async (req, res, next) => {
         try {
 
           const user = req.user as User;
-          const feedSlug = String(req.params.feedSlug);
-          const feed = await feedsRepository.getFeedBySlug(feedSlug);
+          const feed = await feedsRepository.getFeedBySlug(String(req.params.feedSlug));
           if (!feed) {
             return res.status(404).json({
               error: '잘못된 요청입니다.',
@@ -84,7 +83,7 @@ router.get('/:feedSlug/new-url',
     requireLogin,
     async (req, res, next) => {
     try {
-        res.render('new-url', {title: '새 스크랩'});
+        res.render('new-url', {title: '컨텐츠 추가하기'});
     } catch (err) {
         next(err);
     }

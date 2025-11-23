@@ -57,7 +57,7 @@ router.post('/',
 });
 
 
-// 피드 내 추천 게시글 조회
+// 무한 스크롤시 피드의 추천 게시글을 계속 조회하는 경로
 router.get('/:feedSlug/recommendations',
     requireLogin,
     async (req, res, next) => {

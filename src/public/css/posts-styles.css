@@ -362,29 +362,23 @@ body {
     margin: 20px 0;
 }
 
-/* Add Content Button */
+/* 컨텐츠 추가 버튼 */
 .add-content-btn {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    z-index: 1000;
-    padding: 12px 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
     background-color: #292929;
     color: #ffffff;
     text-decoration: none;
-    border-radius: 6px;
+    border-radius: 20px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
 }
 
 .add-content-btn:hover {
     background-color: #000000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
 }
 
@@ -417,9 +411,12 @@ body {
     }
 
     .add-content-btn {
-        top: 70px;
-        right: 16px;
-        padding: 10px 20px;
-        font-size: 13px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .add-content-btn-icon {
+        width: 14px;
+        height: 14px;
     }
 }

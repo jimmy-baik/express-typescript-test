@@ -13,20 +13,9 @@
 
     <%- include('partials/header.ejs') %>
 
-    <!-- 컨텐츠 추가하기 버튼 -->
-    <% if (typeof feedSlug !== 'undefined') { %>
-        <a href="/feeds/<%= feedSlug %>/new-url" class="add-content-btn">
-            <svg class="add-content-btn-icon" viewBox="0 0 24 24">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            컨텐츠 추가하기
-        </a>
-    <% } %>
-
     <!-- 메인 컨텐츠 -->
     <main class="main-content">
-        <div class="content-container">
+        <div class="content-container" data-feed-slug="<%= typeof feedSlug !== 'undefined' ? feedSlug : '' %>">
             <% if (posts && posts.length > 0) { %>
                 <div class="posts-list">
                     <% posts.forEach(function(post) { %>
@@ -136,7 +125,16 @@
             
             <% if (!posts || posts.length === 0) { %>
                 <div class="no-posts">
-                    <p>게시글이 없습니다.</p>
+                    <p>아직 게시글이 없어요. 첫 컨텐츠를 추가해 보세요.</p>
+                    <% if (typeof feedSlug !== 'undefined') { %>
+                        <a href="/feeds/<%= feedSlug %>/new-url" class="add-content-btn">
+                            <svg class="add-content-btn-icon" viewBox="0 0 24 24">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            컨텐츠 추가하기
+                        </a>
+                    <% } %>
                 </div>
             <% } %>
         </div>
@@ -144,6 +142,8 @@
     </main>
 
 </body>
-<script src="/js/posts.js"></script>
+<script src="/js/user-engagements.mjs" type="module"></script>
+<script src="/js/posts.js" type="module"></script>
+
 </html>
 

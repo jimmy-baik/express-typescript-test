@@ -83,13 +83,12 @@ router.get('/:feedSlug',
 
           const [posts, userInteractionHistory] = await Promise.all([postsPromise, userInteractionHistoryPromise]);
 
-          console.log('posts', posts);
-
           res.render('posts', {
             title: '게시글 목록', 
             posts: posts, 
             userLikedPosts: userInteractionHistory.likedPostIds,
-            feedSlug: req.params.feedSlug
+            feedSlug: req.params.feedSlug,
+            showAddContentBtn: true
           });
 
         }

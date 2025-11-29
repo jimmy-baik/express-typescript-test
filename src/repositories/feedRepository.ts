@@ -1,9 +1,9 @@
 
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import db from '@adapters/secondary/db/client';
-import { feedsTable, feedMembersTable } from '@adapters/secondary/db/schema';
-import { Feed } from '@models/feeds';
-import { getUnixTimestamp, unixTimestampToDate} from '@system/timezone';
+import { feedsTable, feedMembersTable, feedInvitesTable } from '@adapters/secondary/db/schema';
+import { Feed, FeedInvite } from '@models/feeds';
+import { getUnixTimestamp, unixTimestampToDate, dateToUnixTimestamp } from '@system/timezone';
 
 
 export class FeedRepository {
@@ -45,6 +45,34 @@ export class FeedRepository {
         }
         
         return this.toDomainFeed(newFeed, [ownerUserId]);
+    }
+
+    
+   /**
+    * 사용자를 피드 멤버에 추가한다.
+    * @param feedId 피드 id
+    * @param userId 사용자 id
+   */
+    async createUserToFeedMembership(feedId: number, userId: number): Promise<void> {
+        const existingMembership = await this.db.select().from(feedMembersTable).where(and(eq(feedMembersTable.feedId, feedId), eq(feedMembersTable.userId, userId))).limit(1).get();
+        if (existingMembership) {
+            console.log(`이미 피드 멤버에 추가되어 있습니다. feedId: ${feedId}, userId: ${userId}`);
+            return;
+        }
+        
+        await this.db.insert(feedMembersTable).values({
+            feedId: feedId,
+            userId: userId,
+        });
+    }
+
+   /**
+    * 사용자를 피드 멤버에서 제거한다.
+    * @param feedId 피드 id
+    * @param userId 사용자 id
+   */
+    async deleteUserFromFeed(feedId: number, userId: number): Promise<void> {
+        await this.db.delete(feedMembersTable).where(and(eq(feedMembersTable.feedId, feedId), eq(feedMembersTable.userId, userId)));
     }
 
     /**
@@ -113,11 +141,61 @@ export class FeedRepository {
         return this.toDomainFeed(feed, memberUserIds);
     }
 
+
+    /**
+     * 피드 초대 정보를 생성한다.
+     * @param feedId 피드 id
+     * @param createdByUserId 초대를 생성한 user id
+     * @param inviteTokenString 초대 토큰
+     * @param expiresAt 초대 만료 일시
+     * @returns 생성된 초대 정보
+     */
+    async createFeedInvite(feedId: number, createdByUserId: number, inviteTokenString: string, expiresAt: Date): Promise<FeedInvite> {
+        const invite = await this.db.insert(feedInvitesTable).values({
+            feedId: feedId,
+            inviteToken: inviteTokenString,
+            createdByUserId: createdByUserId,
+            createdAt: getUnixTimestamp(),
+            expiresAt: dateToUnixTimestamp(expiresAt),
+            isActive: 1,
+        }).returning().get();
+        return this.toDomainFeedInvite(invite);
+    }
+
+    /**
+     * 초대 토큰으로 피드 초대 정보를 조회한다.
+     * @param inviteToken 초대 토큰
+     * @returns 조회된 피드 초대 정보. 조회되지 않으면 null 반환
+     */
+    async getFeedInviteByInviteToken(inviteToken: string): Promise<FeedInvite | null> {
+        const invite = await this.db
+            .select()
+            .from(feedInvitesTable)
+            .where(eq(feedInvitesTable.inviteToken, inviteToken))
+            .limit(1)
+            .get();
+
+        if (!invite) {
+            return null;
+        }
+
+        return this.toDomainFeedInvite(invite);
+    }
+
     private toDomainFeed(dbFeed: typeof feedsTable.$inferSelect, memberUserIds: number[]): Feed {
         return {
             ...dbFeed,
             createdAt: unixTimestampToDate(dbFeed.createdAt),
             memberUserIds: memberUserIds,
+        };
+    }
+
+    private toDomainFeedInvite(dbInvite: typeof feedInvitesTable.$inferSelect): FeedInvite {
+        return {
+            ...dbInvite,
+            createdAt: unixTimestampToDate(dbInvite.createdAt),
+            expiresAt: unixTimestampToDate(dbInvite.expiresAt),
+            isActive: dbInvite.isActive === 1,
         };
     }
 

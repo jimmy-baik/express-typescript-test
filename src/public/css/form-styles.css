@@ -94,7 +94,7 @@ body {
 
 .btn {
     display: inline-block;
-    padding: 12px 24px;
+    padding: 8px 8px;
     background: #000000;
     color: #ffffff;
     text-decoration: none;
@@ -118,7 +118,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6b6b6b;
+    background: #999999;
 }
 
 .btn-secondary:hover {

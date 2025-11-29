@@ -136,6 +136,12 @@
     font-weight: 600;
 }
 
+.people-icon {
+    width: 16px;
+    height: 16px;
+    color: #6b6b6b;
+}
+
 /* Header Responsive Styles */
 @media (max-width: 768px) {
     .header-content {

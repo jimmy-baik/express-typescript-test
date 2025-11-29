@@ -108,4 +108,32 @@ router.get('/:feedSlug/new-url',
     }
 });
 
+// 피드 초대 링크 처리
+router.get('/invite/:inviteToken',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+        const user = req.user as User;
+        const inviteToken = String(req.params.inviteToken);
+        
+        // 토큰 문자열과 일치하는 초대링크가 있는지 확인한다. 없으면 거절. 유효기간이 만료되거나 취소되었을 경우에도 거절.
+        const invite = await feedsRepository.getFeedInviteByInviteToken(inviteToken);
+        if (!invite || !invite.isActive || invite.expiresAt < new Date()) {
+            return res.status(404).json({
+                error: '초대 링크 오류',
+                message: '이 초대 링크는 만료되었거나 취소되었습니다.'
+            });
+        }
+
+        // 초대 링크를 사용한 사용자를 피드 멤버에 추가한다. (이미 추가되어 있으면 무시)
+        await feedsRepository.createUserToFeedMembership(invite.feedId, user.userId);
+
+        // 자신의 피드 목록을 보여주는 경로로 리다이렉트한다
+        res.redirect(`/feeds`);
+
+    } catch (err) {
+        next(err);
+    }
+});
+
 export default router;

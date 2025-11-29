@@ -10,6 +10,7 @@ import { createPostEmbedding } from '@services/contentExtractionService';
 import { searchPostsInFeedByKeyword, searchPostsInFeedByEmbedding } from '@services/searchService';
 import { Post } from '@models/posts';
 import { User } from '@models/users';
+import { generateRandomString } from '@system/generators';
 
 const router = express.Router();
 
@@ -103,6 +104,56 @@ router.get('/:feedSlug/new-url',
     async (req, res, next) => {
     try {
         res.render('new-url', {title: '컨텐츠 추가하기', feedSlug: String(req.params.feedSlug)});
+    } catch (err) {
+        next(err);
+    }
+});
+
+// 새 초대 링크를 생성, 표시하는 페이지
+router.get('/:feedSlug/invites/new',
+    requireLogin,
+    async (req, res, next) => {
+    try {
+
+        const feedSlug = String(req.params.feedSlug);
+        const feed = await feedsRepository.getFeedBySlug(feedSlug);
+        
+        if (!feed) {
+            return res.status(404).json({
+                error: '피드를 찾을 수 없습니다.',
+                message: '피드를 찾을 수 없습니다.'
+            });
+        }
+
+        const userId = (req.user as User).userId;
+        
+        // 피드에 속한 사람이 아니라면 생성 불가
+        if (feed.ownerUserId !== userId && !feed.memberUserIds.includes(userId)) {
+            return res.status(403).json({
+                error: '권한이 없습니다.',
+                message: '피드 멤버만 초대 링크를 생성할 수 있습니다.'
+            });
+        }
+
+        // 기본 유효기간은 7일로 생성한다
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        // 랜덤한 토큰 문자열을 생성한다
+        const inviteToken = generateRandomString(12);
+
+        const invite = await feedsRepository.createFeedInvite(
+            feed.feedId,
+            userId,
+            inviteToken,
+            expiresAt
+        );
+
+        // 초대 링크 URL을 조립한다
+        const baseUrl = process.env.CURRENT_SERVER_ROOT_URL || 'http://localhost:3002';
+        const inviteUrl = `${baseUrl}/feeds/invite/${invite.inviteToken}`;
+
+        res.render('new-invite', {title: '초대 링크 생성하기', feedSlug: String(req.params.feedSlug), inviteUrl: inviteUrl});
     } catch (err) {
         next(err);
     }

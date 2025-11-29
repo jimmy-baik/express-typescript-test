@@ -8,7 +8,7 @@ import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
 import { User } from '@models/users';
 import { ingestContent } from '@services/contentExtractionService';
 import { getRecommendationsForUser } from '@services/searchService';
-
+import { generateRandomString } from '@system/generators';
 
 const router = express.Router();
 
@@ -17,20 +17,6 @@ const postsRepository = new PostRepository(db, opensearchClient);
 const usersRepository = new UserRepository(db);
 const feedsRepository = new FeedRepository(db);
 
-
-/**
- * 정해진 길이의 랜덤 문자열을 생성하는 helper 함수
- * @param length 문자열 길이
- * @returns 입력된 길이만큼의 랜덤 문자열
- */
-function generateRandomString(length: number): string {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-}
 
 // 피드 생성
 router.post('/',
@@ -131,60 +117,5 @@ router.post('/:feedSlug/url',
         next(err);
     }
 });
-
-
-// 피드에 초대하는 링크를 생성
-router.post('/:feedSlug/invites',
-    requireLogin,
-    async (req, res, next) => {
-        try {
-            const feedSlug = String(req.params.feedSlug);
-            const feed = await feedsRepository.getFeedBySlug(feedSlug);
-            
-            if (!feed) {
-                return res.status(404).json({
-                    error: '피드를 찾을 수 없습니다.',
-                    message: '피드를 찾을 수 없습니다.'
-                });
-            }
-
-            const userId = (req.user as User).userId;
-            
-            // 피드에 속한 사람이 아니라면 생성 불가
-            if (feed.ownerUserId !== userId && !feed.memberUserIds.includes(userId)) {
-                return res.status(403).json({
-                    error: '권한이 없습니다.',
-                    message: '피드 멤버만 초대 링크를 생성할 수 있습니다.'
-                });
-            }
-
-            // 기본 유효기간은 7일로 생성한다
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + 7);
-
-            // 랜덤한 토큰 문자열을 생성한다
-            const inviteToken = generateRandomString(12);
-
-            const invite = await feedsRepository.createFeedInvite(
-                feed.feedId,
-                userId,
-                inviteToken,
-                expiresAt
-            );
-
-            // 초대 링크 URL을 조립한다
-            const baseUrl = process.env.CURRENT_SERVER_ROOT_URL || 'http://localhost:3002';
-            const inviteUrl = `${baseUrl}/feeds/invite/${invite.inviteToken}`;
-
-            res.json({
-                inviteUrl: inviteUrl,
-                expiresAt: expiresAt
-            });
-        } catch (err) {
-            next(err);
-        }
-    }
-);
-
 
 export default router;

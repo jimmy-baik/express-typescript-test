@@ -1,5 +1,5 @@
 
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import db from '@adapters/secondary/db/client';
 import { feedsTable, feedMembersTable, feedInvitesTable } from '@adapters/secondary/db/schema';
 import { Feed, FeedInvite } from '@models/feeds';
@@ -45,6 +45,34 @@ export class FeedRepository {
         }
         
         return this.toDomainFeed(newFeed, [ownerUserId]);
+    }
+
+    
+   /**
+    * 사용자를 피드 멤버에 추가한다.
+    * @param feedId 피드 id
+    * @param userId 사용자 id
+   */
+    async createUserToFeedMembership(feedId: number, userId: number): Promise<void> {
+        const existingMembership = await this.db.select().from(feedMembersTable).where(and(eq(feedMembersTable.feedId, feedId), eq(feedMembersTable.userId, userId))).limit(1).get();
+        if (existingMembership) {
+            console.log(`이미 피드 멤버에 추가되어 있습니다. feedId: ${feedId}, userId: ${userId}`);
+            return;
+        }
+        
+        await this.db.insert(feedMembersTable).values({
+            feedId: feedId,
+            userId: userId,
+        });
+    }
+
+   /**
+    * 사용자를 피드 멤버에서 제거한다.
+    * @param feedId 피드 id
+    * @param userId 사용자 id
+   */
+    async deleteUserFromFeed(feedId: number, userId: number): Promise<void> {
+        await this.db.delete(feedMembersTable).where(and(eq(feedMembersTable.feedId, feedId), eq(feedMembersTable.userId, userId)));
     }
 
     /**
@@ -112,6 +140,7 @@ export class FeedRepository {
         const memberUserIds = feed.memberUserIds ? feed.memberUserIds.split(',').map(id => parseInt(id, 10)) : [];
         return this.toDomainFeed(feed, memberUserIds);
     }
+
 
     /**
      * 피드 초대 정보를 생성한다.

@@ -35,6 +35,17 @@ export const ingestionSourcesTable = sqliteTable("ingestion_sources", {
     createdAt: int('created_at').notNull(), // sqlite는 timestamp 타입이 없으므로 int로 저장
 });
 
+// 피드 초대 정보
+export const feedInvitesTable = sqliteTable("feed_invites", {
+    inviteId: int('invite_id').primaryKey({ autoIncrement: true }),
+    feedId: int('feed_id').notNull().references(() => feedsTable.feedId),
+    inviteToken: text('invite_token').notNull().unique(),
+    createdByUserId: int('created_by_user_id').notNull().references(() => usersTable.userId),
+    createdAt: int('created_at').notNull(), // sqlite는 timestamp 타입이 없으므로 int로 저장s
+    expiresAt: int('expires_at').notNull(), // sqlite는 timestamp 타입이 없으므로 int로 저장
+    isActive: int('is_active').notNull().default(1), // 0 = false, 1 = true
+});
+
 // 다대다 mapping 테이블
 export const feedMembersTable = sqliteTable("feed_members", {
     feedId: int('feed_id').notNull().references(() => feedsTable.feedId),

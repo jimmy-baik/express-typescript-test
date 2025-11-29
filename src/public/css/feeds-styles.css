@@ -242,7 +242,6 @@ body {
     transition: background-color 0.2s ease;
     text-align: center;
     position: relative;
-    margin-left: 32px;
 }
 
 /* Timeline line extension to "더 보기" button */
@@ -365,10 +364,6 @@ body {
         top: 20px;
         width: 8px;
         height: 8px;
-    }
-
-    .view-more-btn {
-        margin-left: 28px;
     }
 
     .view-more-btn::before {

@@ -10,6 +10,19 @@ CREATE TABLE `feed_ingestion_sources` (
 	FOREIGN KEY (`owner_user_id`) REFERENCES `users`(`user_id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `feed_invites` (
+	`invite_id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`feed_id` integer NOT NULL,
+	`invite_token` text NOT NULL,
+	`created_by_user_id` integer NOT NULL,
+	`created_at` integer NOT NULL,
+	`expires_at` integer NOT NULL,
+	`is_active` integer DEFAULT 1 NOT NULL,
+	FOREIGN KEY (`feed_id`) REFERENCES `feeds`(`feed_id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`user_id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `feed_invites_invite_token_unique` ON `feed_invites` (`invite_token`);--> statement-breakpoint
 CREATE TABLE `feed_members` (
 	`feed_id` integer NOT NULL,
 	`user_id` integer NOT NULL,

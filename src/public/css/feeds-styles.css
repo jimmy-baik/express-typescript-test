@@ -97,12 +97,6 @@ body {
     color: #6b6b6b;
 }
 
-.people-icon {
-    width: 16px;
-    height: 16px;
-    color: #6b6b6b;
-}
-
 .member-count {
     font-weight: 500;
 }
@@ -242,7 +236,6 @@ body {
     transition: background-color 0.2s ease;
     text-align: center;
     position: relative;
-    margin-left: 32px;
 }
 
 /* Timeline line extension to "더 보기" button */
@@ -365,10 +358,6 @@ body {
         top: 20px;
         width: 8px;
         height: 8px;
-    }
-
-    .view-more-btn {
-        margin-left: 28px;
     }
 
     .view-more-btn::before {

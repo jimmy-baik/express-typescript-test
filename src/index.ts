@@ -192,6 +192,7 @@ app.use((req: express.Request, res: express.Response) => {
 });
 
 if (process.env.NODE_ENV !== 'test') {
+    console.log(`서버 구동 중 - port ${port}`);
 	app.listen(port);
 }
 

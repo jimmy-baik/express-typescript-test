@@ -6,7 +6,7 @@ dotenv.config();
 export const OPENSEARCH_INDEX_NAME = "feed_posts";
 const EMBEDDING_DIMENSION = 768;
 export const opensearchClient = new Client({
-  node: "http://localhost:9200",
+  node: process.env.OPENSEARCH_URL || "http://localhost:9200",
   auth: {
     username: process.env.OPENSEARCH_ID || '',
     password: process.env.OPENSEARCH_PW || '',

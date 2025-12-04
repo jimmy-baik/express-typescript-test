@@ -6,6 +6,7 @@ import { PostRepository } from '@repositories/postRepository';
 import { UserRepository } from '@repositories/userRepository';
 import { FeedRepository } from '@repositories/feedRepository';
 import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
+import { requireFeedMembership } from '@adapters/primary/middlewares/requireFeedMembership';
 import { createPostEmbedding } from '@services/contentExtractionService';
 import { searchPostsInFeedByKeyword, searchPostsInFeedByEmbedding } from '@services/searchService';
 import { Post } from '@models/posts';
@@ -65,6 +66,7 @@ router.get('/new',
 // 단일 피드 조회 (피드의 최초 추천 게시글 열람)
 router.get('/:feedSlug',
     requireLogin,
+    requireFeedMembership,
     async (req, res, next) => {
         try {
 
@@ -101,6 +103,7 @@ router.get('/:feedSlug',
 // 새 URL 스크랩 페이지
 router.get('/:feedSlug/new-url',
     requireLogin,
+    requireFeedMembership,
     async (req, res, next) => {
     try {
         res.render('new-url', {title: '컨텐츠 추가하기', feedSlug: String(req.params.feedSlug)});
@@ -112,6 +115,7 @@ router.get('/:feedSlug/new-url',
 // 새 초대 링크를 생성, 표시하는 페이지
 router.get('/:feedSlug/invites/new',
     requireLogin,
+    requireFeedMembership,
     async (req, res, next) => {
     try {
 
@@ -159,7 +163,8 @@ router.get('/:feedSlug/invites/new',
     }
 });
 
-// 피드 초대 링크 처리
+
+// 초대 링크를 가진 사용자가 접근시 초대를 처리하는 경로. 이 경로는 피드에 속하지 않은 사용자가 바로 접근 가능 (inviteToken이 유효할 경우 바로 인가)
 router.get('/invite/:inviteToken',
     requireLogin,
     async (req, res, next) => {

@@ -5,6 +5,7 @@ import { FeedRepository } from '@repositories/feedRepository';
 import { UserRepository } from '@repositories/userRepository';
 import { opensearchClient } from '@adapters/secondary/opensearch';
 import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
+import { requireFeedMembership } from '@adapters/primary/middlewares/requireFeedMembership';
 import { User } from '@models/users';
 import { ingestContent } from '@services/contentExtractionService';
 import { getRecommendationsForUser } from '@services/searchService';
@@ -46,6 +47,7 @@ router.post('/',
 // 무한 스크롤시 피드의 추천 게시글을 계속 조회하는 경로
 router.get('/:feedSlug/recommendations',
     requireLogin,
+    requireFeedMembership,
     async (req, res, next) => {
     try {
 
@@ -78,6 +80,7 @@ router.get('/:feedSlug/recommendations',
 // 피드에 게시글 추가
 router.post('/:feedSlug/url',
     requireLogin,
+    requireFeedMembership,
     async (req, res, next) => {
     try {
         const feedSlug = String(req.params.feedSlug);

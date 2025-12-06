@@ -67,7 +67,7 @@ export class PostRepository {
     ): Promise<Post> {
 
         const newPost = await this.db.insert(postsTable).values({
-            createdAt: getUnixTimestamp(),
+            createdAt: new Date(),
             originalUrl: originalUrl,
             textContent: textContent,
             htmlContent: htmlContent,
@@ -87,7 +87,7 @@ export class PostRepository {
             feedId: feedId,
             postId: postId,
             ownerUserId: ownerUserId,
-            submittedAt: dateToUnixTimestamp(submittedAt),
+            submittedAt: submittedAt,
         });
 
         const post = await this.getPostByPostId(postId);
@@ -111,16 +111,7 @@ export class PostRepository {
     private toDomainPost(post: typeof postsTable.$inferSelect): Post {
         return {
             ...post,
-            createdAt: unixTimestampToDate(post.createdAt),
             embedding: post.embedding ? JSON.parse(post.embedding) : null
-        };
-    }
-
-    private toDBPost(post: Post): typeof postsTable.$inferInsert {
-        return {
-            ...post,
-            createdAt: dateToUnixTimestamp(post.createdAt),
-            embedding: post.embedding ? JSON.stringify(post.embedding) : null,
         };
     }
 
@@ -128,8 +119,6 @@ export class PostRepository {
         return {
             ...feedPostRelationship,
             ...post,
-            createdAt: unixTimestampToDate(post.createdAt),
-            submittedAt: unixTimestampToDate(feedPostRelationship.submittedAt),
             embedding: post.embedding ? JSON.parse(post.embedding) : null
         };
     }

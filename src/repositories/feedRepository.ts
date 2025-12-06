@@ -29,7 +29,7 @@ export class FeedRepository {
                 title: title,
                 slug: slug,
                 ownerUserId: ownerUserId,
-                createdAt: getUnixTimestamp(),
+                createdAt: new Date(),
             }).returning().get();
 
             // 피드 소유자를 피드 멤버에 추가한다
@@ -155,11 +155,11 @@ export class FeedRepository {
             feedId: feedId,
             inviteToken: inviteTokenString,
             createdByUserId: createdByUserId,
-            createdAt: getUnixTimestamp(),
-            expiresAt: dateToUnixTimestamp(expiresAt),
-            isActive: 1,
+            createdAt: new Date(),
+            expiresAt: expiresAt,
+            isActive: true,
         }).returning().get();
-        return this.toDomainFeedInvite(invite);
+        return invite;
     }
 
     /**
@@ -179,23 +179,13 @@ export class FeedRepository {
             return null;
         }
 
-        return this.toDomainFeedInvite(invite);
+        return invite;
     }
 
     private toDomainFeed(dbFeed: typeof feedsTable.$inferSelect, memberUserIds: number[]): Feed {
         return {
             ...dbFeed,
-            createdAt: unixTimestampToDate(dbFeed.createdAt),
-            memberUserIds: memberUserIds,
-        };
-    }
-
-    private toDomainFeedInvite(dbInvite: typeof feedInvitesTable.$inferSelect): FeedInvite {
-        return {
-            ...dbInvite,
-            createdAt: unixTimestampToDate(dbInvite.createdAt),
-            expiresAt: unixTimestampToDate(dbInvite.expiresAt),
-            isActive: dbInvite.isActive === 1,
+            memberUserIds: memberUserIds
         };
     }
 

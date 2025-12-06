@@ -5,7 +5,7 @@ export const usersTable = sqliteTable("users", {
   userId: int('user_id').primaryKey({ autoIncrement: true }), // 기본 키. autoIncrement 사용
   username: text().notNull().unique(), // 사용자 계정명 (e.g. user123). 소셜로그인일 경우 소셜 로그인 서비스에서 제공하는 고유 id를 사용
   hashedPassword: text('hashed_password').notNull(),
-  fullname: text('fullname'), // 사용자 이름 (e.g. 홍길동)
+  nickname: text('nickname'), // UI에 표시되는 이름 (e.g. 홍길동, John)
   createdAt: int('created_at', { mode: 'timestamp' }).notNull(), // sqlite는 timestamp 타입이 없으므로 int로 저장
   userEmbedding: text('user_embedding'), // JSON string으로 저장된 embedding vector
 });

@@ -34,12 +34,12 @@ export class UserRepository {
         return this.toDomainUserInteractionHistory(userInteractions);
     }
 
-    async createUser(username: string, password: string, fullname: string | null): Promise<User> {
+    async createUser(username: string, password: string, nickname: string | null): Promise<User> {
         const hashedPassword = await bcrypt.hash(password, 10);
         const createdAt = new Date();
         const newUser = await this.db.insert(usersTable).values({
             username,
-            fullname,
+            nickname,
             hashedPassword,
             createdAt,
         }).returning().get();

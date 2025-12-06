@@ -2,7 +2,7 @@ export interface User {
     userId: number
     username: string
     hashedPassword: string
-    fullname: string | null
+    nickname: string | null // UI에 표시되는 이름 (e.g. 홍길동, John)
     createdAt: Date
     userEmbedding: number[] | null
 }

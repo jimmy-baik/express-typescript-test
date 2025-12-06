@@ -3,7 +3,6 @@ import { eq, sql, and } from 'drizzle-orm';
 import db from '@adapters/secondary/db/client';
 import { feedsTable, feedMembersTable, feedInvitesTable } from '@adapters/secondary/db/schema';
 import { Feed, FeedInvite } from '@models/feeds';
-import { getUnixTimestamp, unixTimestampToDate, dateToUnixTimestamp } from '@system/timezone';
 
 
 export class FeedRepository {

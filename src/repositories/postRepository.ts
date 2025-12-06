@@ -3,7 +3,7 @@ import { opensearchClient, OPENSEARCH_INDEX_NAME } from '@adapters/secondary/ope
 import db from '@adapters/secondary/db/client';
 import { postsTable, feedPostsTable } from '@adapters/secondary/db/schema';
 import { eq, and, inArray, desc } from 'drizzle-orm';
-import { dateToUnixTimestamp, getUnixTimestamp, unixTimestampToDate } from '@system/timezone';
+import { dateToUnixTimestamp } from '@system/timezone';
 
 export class PostRepository {
     private db: typeof db;

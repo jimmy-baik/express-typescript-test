@@ -4,7 +4,7 @@ import { User } from '@models/users';
 import { Feed } from '@models/feeds';
 import { PostRepository } from '@repositories/postRepository';
 import { UserRepository } from '@repositories/userRepository';
-import { unixTimestampToDate, UtcToKst } from '@system/timezone';
+import { unixTimestampToDate } from '@system/timezone';
 
 export async function searchPostsInFeedByKeyword(userQuery: string, feedId: number) {
 

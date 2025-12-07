@@ -4,7 +4,6 @@ import { UserInteractionType } from '@models/users';
 import db from '@adapters/secondary/db/client';
 import { usersTable, userPostInteractionsTable } from '@adapters/secondary/db/schema';
 import { eq } from 'drizzle-orm';
-import { getUnixTimestamp, unixTimestampToDate } from '@system/timezone';
 
 
 export class UserRepository {
@@ -35,12 +34,12 @@ export class UserRepository {
         return this.toDomainUserInteractionHistory(userInteractions);
     }
 
-    async createUser(username: string, password: string, fullname: string | null): Promise<User> {
+    async createUser(username: string, password: string, nickname: string | null): Promise<User> {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const createdAt = getUnixTimestamp();
+        const createdAt = new Date();
         const newUser = await this.db.insert(usersTable).values({
             username,
-            fullname,
+            nickname,
             hashedPassword,
             createdAt,
         }).returning().get();
@@ -49,7 +48,7 @@ export class UserRepository {
     }
 
     async likePost(userId: number, postId: number): Promise<number> {
-        const createdAt = getUnixTimestamp();
+        const createdAt = new Date();
         const like = await this.db.insert(userPostInteractionsTable).values({
             userId,
             postId,
@@ -60,7 +59,7 @@ export class UserRepository {
     }
 
     async viewPost(userId: number, postId: number): Promise<number> {
-        const createdAt = getUnixTimestamp();
+        const createdAt = new Date();
         const view = await this.db.insert(userPostInteractionsTable).values({
             userId,
             postId,
@@ -83,7 +82,6 @@ export class UserRepository {
     private toDomainUser(user: typeof usersTable.$inferSelect): User {
         return {
             ...user,
-            createdAt: unixTimestampToDate(user.createdAt),
             userEmbedding: user.userEmbedding ? JSON.parse(user.userEmbedding) : null,
         };
     }

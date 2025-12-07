@@ -17,7 +17,7 @@ CREATE TABLE `feed_invites` (
 	`created_by_user_id` integer NOT NULL,
 	`created_at` integer NOT NULL,
 	`expires_at` integer NOT NULL,
-	`is_active` integer DEFAULT 1 NOT NULL,
+	`is_active` integer DEFAULT true NOT NULL,
 	FOREIGN KEY (`feed_id`) REFERENCES `feeds`(`feed_id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`user_id`) ON UPDATE no action ON DELETE no action
 );
@@ -84,7 +84,7 @@ CREATE TABLE `users` (
 	`user_id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`username` text NOT NULL,
 	`hashed_password` text NOT NULL,
-	`fullname` text,
+	`nickname` text,
 	`created_at` integer NOT NULL,
 	`user_embedding` text
 );

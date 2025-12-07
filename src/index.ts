@@ -18,7 +18,6 @@ import feedsViewRouter from '@adapters/primary/routes/feeds/feedsViewRouter';
 
 // API 경로 (JSON 응답을 반환)
 import authApiRouter from '@adapters/primary/routes/auth/authApiRouter';
-import usersApiRouter from '@adapters/primary/routes/users/usersApiRouter';
 import feedsApiRouter from '@adapters/primary/routes/feeds/feedsApiRouter';
 import postsApiRouter from '@adapters/primary/routes/posts/postsApiRouter';
 
@@ -79,29 +78,29 @@ const usersRepository = new UserRepository(db);
 app.use(passport.initialize());
 app.use(passport.session());
 
-// passport local strategy 설정
-passport.use(new LocalStrategy({
-    usernameField: 'username',
-    passwordField: 'password'
-}, async (username, password, done) => { // verify 함수
-    try {
+// passport local strategy 설정 - 지금은 사용하지 않음
+// passport.use(new LocalStrategy({
+//     usernameField: 'username',
+//     passwordField: 'password'
+// }, async (username, password, done) => { // verify 함수
+//     try {
 
-        const user = await usersRepository.getUserByUsername(username);
-        if (!user) {
-            return done(null, false);
-        }
+//         const user = await usersRepository.getUserByUsername(username);
+//         if (!user) {
+//             return done(null, false);
+//         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
-        if (!isPasswordValid) {
-            return done(null, false);
-        }
+//         const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
+//         if (!isPasswordValid) {
+//             return done(null, false);
+//         }
 
-        return done(null, user);
+//         return done(null, user);
 
-    } catch (err) {
-        return done(err);
-    }
-}));
+//     } catch (err) {
+//         return done(err);
+//     }
+// }));
 
 // passport kakao strategy 설정
 const KAKAO_CALLBACK_URL = process.env.CURRENT_SERVER_ROOT_URL + '/api/auth/kakao/callback';
@@ -159,9 +158,11 @@ app.use('/feeds', feedsViewRouter);
 
 // API 경로 등록
 app.use('/api/auth', authApiRouter);
-app.use('/api/users', usersApiRouter);
 app.use('/api/feeds', feedsApiRouter);
 app.use('/api/posts', postsApiRouter);
+
+// users API는 지금은 사용하지 않음
+// app.use('/api/users', usersApiRouter);
 
 
 // 에러 핸들링

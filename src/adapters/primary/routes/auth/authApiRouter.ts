@@ -47,16 +47,16 @@ function createPassportCustomCallbackFunction(req: express.Request, res: express
 
 
 
-// 일반 로그인 처리 경로
-router.post('/login',
-    (req, res, next) => {
-        // custom redirect 로직을 가지는 passport 콜백함수를 생성한다.
-        const customCallback = createPassportCustomCallbackFunction(req, res, next);
+// 일반 로그인 처리 경로 - 지금은 사용하지 않음
+// router.post('/login',
+//     (req, res, next) => {
+//         // custom redirect 로직을 가지는 passport 콜백함수를 생성한다.
+//         const customCallback = createPassportCustomCallbackFunction(req, res, next);
 
-        // passport.authenticate 에 커스텀 콜백을 등록한뒤 바로 호출
-        passport.authenticate('local', customCallback)(req, res, next);
-    }
-);
+//         // passport.authenticate 에 커스텀 콜백을 등록한뒤 바로 호출
+//         passport.authenticate('local', customCallback)(req, res, next);
+//     }
+// );
 
 
 // 카카오 로그인 처리 최초 진입 경로

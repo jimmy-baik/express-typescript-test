@@ -1,11 +1,13 @@
 import { ISearchEngine, FeedPostSearchResult } from "./searchEngine.interface";
-import { MeiliSearch } from "meilisearch";
+import { MeiliSearch, EnqueuedTask } from "meilisearch";
 import dotenv from 'dotenv';
 import { FeedPost } from "@models/posts";
+import { NoopLogger } from "drizzle-orm";
 
 dotenv.config();
 
 const MEILISEARCH_INDEX_NAME = "feed_posts";
+const EMBEDDING_DIMENSION = 768;
 
 export class MeilisearchAdapter implements ISearchEngine {
     private client: MeiliSearch;
@@ -20,15 +22,15 @@ export class MeilisearchAdapter implements ISearchEngine {
     }
 
     async initializeIndex(): Promise<void> {
-        try {
-            // index가 이미 존재하는지 확인한다. 있으면 초기화를 중단하고 바로 종료
-            await this.client.getIndex(this.indexName);
-            return;
-        } catch (error) {
-            // index가 존재하지 않으면 생성한다.
-            console.log('meilisearch index가 존재하지 않는 것 같습니다. 생성합니다..');
-            await this.client.createIndex(this.indexName, { primaryKey: 'postId' });
-        }
+        // try {
+        //     // index가 이미 존재하는지 확인한다. 있으면 초기화를 중단하고 바로 종료
+        //     await this.client.getIndex(this.indexName);
+        //     return;
+        // } catch (error) {
+        //     // index가 존재하지 않으면 생성한다.
+        //     console.log('meilisearch index가 존재하지 않는 것 같습니다. 생성합니다..');
+        //     await this.client.createIndex(this.indexName, { primaryKey: 'postId' });
+        // }
 
         // index가 생성되었으면 설정을 진행한다.
         const index = this.client.index(this.indexName);
@@ -73,6 +75,15 @@ export class MeilisearchAdapter implements ISearchEngine {
             'feedId'
         ]);
 
+        await index.updateEmbedders({
+            default: {
+                source: "ollama", // openAi | huggingFace | ollama | rest | userProvided 중 하나여야 함
+                model: "embeddinggemma",
+                dimensions: EMBEDDING_DIMENSION,
+                url: process.env.EMBEDDING_API_URL || 'http://localhost:11434/api/embed'
+            }
+        })
+
         console.log('meilisearch index 초기화 완료');
 
     }
@@ -94,10 +105,13 @@ export class MeilisearchAdapter implements ISearchEngine {
 
         // embedding이 있으면 _vectors 필드에 추가
         if (feedPost.embedding) {
-            searchDocument._vectors = [feedPost.embedding];
+            searchDocument._vectors = {
+                "default": feedPost.embedding
+            };
         }
 
-        await index.addDocuments([searchDocument], { primaryKey: 'postId' });
+        await index.addDocuments([searchDocument]);
+
     }
 
     async searchFeedPostsByKeyword(query: string, feedId: number): Promise<FeedPostSearchResult[]> {
@@ -260,6 +274,10 @@ export class MeilisearchAdapter implements ISearchEngine {
         }
 
         const searchResponse = await index.search('', {
+            hybrid: {
+                embedder: 'default',
+                semanticRatio: 1 // semantic ratio가 1이면 무조건 vector 검색결과만 리턴함
+            },
             vector: embedding,
             limit: Math.min(limit, k || limit), // k 값을 최대값으로 사용
             filter: filter,

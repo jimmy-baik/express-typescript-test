@@ -2,6 +2,7 @@ import express from 'express';
 import { stripHtml } from "string-strip-html";
 import db from '@adapters/secondary/db/client';
 import { opensearchClient } from '@adapters/secondary/opensearch';
+import { getSearchEngine } from '@adapters/secondary/searchengine/searchEngineFactory';
 import { PostRepository } from '@repositories/postRepository';
 import { UserRepository } from '@repositories/userRepository';
 import { FeedRepository } from '@repositories/feedRepository';
@@ -16,7 +17,8 @@ import { generateRandomString } from '@system/generators';
 const router = express.Router();
 
 // Repository 설정
-const postsRepository = new PostRepository(db, opensearchClient);
+const searchEngine = getSearchEngine(process.env.SEARCH_ENGINE_TYPE || "meilisearch");
+const postsRepository = new PostRepository(db, searchEngine);
 const feedsRepository = new FeedRepository(db);
 const usersRepository = new UserRepository(db);
 

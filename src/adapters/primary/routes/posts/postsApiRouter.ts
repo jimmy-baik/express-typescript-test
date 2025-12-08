@@ -1,20 +1,18 @@
 import express from 'express';
-import { randomUUID } from 'node:crypto';
 import { PostRepository } from '@repositories/postRepository';
 import { UserRepository } from '@repositories/userRepository';
 import db from '@adapters/secondary/db/client';
-import { opensearchClient } from '@adapters/secondary/opensearch';
+import { getSearchEngine } from '@adapters/secondary/searchengine/searchEngineFactory';
 import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
-import { ingestContent } from '@services/contentExtractionService';
 import { calculateUserEmbedding } from '@services/embeddingsService';
-import { Post } from '@models/posts';
 import { User } from '@models/users';
-import { stripHtml } from "string-strip-html";
+
 
 const router = express.Router();
 
 // 게시글 Repository 설정
-const postsRepository = new PostRepository(db, opensearchClient);
+const searchEngine = getSearchEngine(process.env.SEARCH_ENGINE_TYPE || "meilisearch");
+const postsRepository = new PostRepository(db, searchEngine);
 
 // 유저 Repository 설정
 const usersRepository = new UserRepository(db);

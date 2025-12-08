@@ -3,7 +3,7 @@ import db from '@adapters/secondary/db/client';
 import { PostRepository } from '@repositories/postRepository';
 import { FeedRepository } from '@repositories/feedRepository';
 import { UserRepository } from '@repositories/userRepository';
-import { opensearchClient } from '@adapters/secondary/opensearch';
+import { getSearchEngine } from '@adapters/secondary/searchengine/searchEngineFactory';
 import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
 import { requireFeedMembership } from '@adapters/primary/middlewares/requireFeedMembership';
 import { User } from '@models/users';
@@ -14,7 +14,8 @@ import { generateRandomString } from '@system/generators';
 const router = express.Router();
 
 // 게시글 Repository 설정
-const postsRepository = new PostRepository(db, opensearchClient);
+const searchEngine = getSearchEngine(process.env.SEARCH_ENGINE_TYPE || "meilisearch");
+const postsRepository = new PostRepository(db, searchEngine);
 const usersRepository = new UserRepository(db);
 const feedsRepository = new FeedRepository(db);
 

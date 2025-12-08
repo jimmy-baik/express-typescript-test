@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto';
 import db from '@adapters/secondary/db/client';
 import { UserRepository } from '@repositories/userRepository';
 import { initializeOpenSearch } from '@adapters/secondary/opensearch';
+import { initializeSearchEngine } from '@adapters/secondary/searchengine/searchEngineFactory';
 
 // View 경로 (HTML 웹페이지를 반환)
 import authViewRouter from '@adapters/primary/routes/auth/authViewRouter';
@@ -65,9 +66,9 @@ app.use(session({
     saveUninitialized: false
 }));
 
-// OpenSearch 초기화
-initializeOpenSearch().catch((err) => {
-    console.error('OpenSearch 초기화 실패:', err);
+// 검색엔진진 초기화
+initializeSearchEngine().catch((err) => {
+    console.error('검색엔진 초기화 실패:', err);
 });
 
 // 유저 Repository 설정

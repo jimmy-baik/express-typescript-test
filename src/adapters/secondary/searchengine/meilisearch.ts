@@ -14,6 +14,7 @@ export class MeilisearchAdapter implements ISearchEngine {
     constructor() {
         this.client = new MeiliSearch({
             host: process.env.MEILISEARCH_URL || "http://localhost:7700",
+            apiKey: process.env.MEILISEARCH_API_KEY || ''
         });
         this.indexName = MEILISEARCH_INDEX_NAME;
     }

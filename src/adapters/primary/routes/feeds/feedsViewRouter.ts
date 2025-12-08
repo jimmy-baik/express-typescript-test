@@ -1,17 +1,13 @@
 import express from 'express';
-import { stripHtml } from "string-strip-html";
 import db from '@adapters/secondary/db/client';
-import { opensearchClient } from '@adapters/secondary/opensearch';
 import { getSearchEngine } from '@adapters/secondary/searchengine/searchEngineFactory';
+import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
+import { requireFeedMembership } from '@adapters/primary/middlewares/requireFeedMembership';
+import { searchPostsInFeedByEmbedding } from '@services/searchService';
+import { User } from '@models/users';
 import { PostRepository } from '@repositories/postRepository';
 import { UserRepository } from '@repositories/userRepository';
 import { FeedRepository } from '@repositories/feedRepository';
-import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
-import { requireFeedMembership } from '@adapters/primary/middlewares/requireFeedMembership';
-import { createPostEmbedding } from '@services/contentExtractionService';
-import { searchPostsInFeedByKeyword, searchPostsInFeedByEmbedding } from '@services/searchService';
-import { Post } from '@models/posts';
-import { User } from '@models/users';
 import { generateRandomString } from '@system/generators';
 
 const router = express.Router();

@@ -43,17 +43,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 보안 헤더
-app.use(
-    helmet({
-        contentSecurityPolicy: { // CSP의 upgrade-insecure-requests 옵션은 임시로 비활성화 (TODO: https 적용 시 활성화 하기)
-            directives: {
-              "upgrade-insecure-requests" : null
-            },
-          },
-        strictTransportSecurity: false // Strict-Transport-Security 헤더는 임시로 비활성화한다. (TODO: https 적용 시 활성화 하기)
-    })
-);
+// 보안 헤더 설정
+app.use(helmet());
 
 // 세션 설정
 const sessionSecretKey = process.env.SESSION_SECRET_KEY;
@@ -66,7 +57,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-// 검색엔진진 초기화
+// 검색엔진 초기화
 initializeSearchEngine().catch((err) => {
     console.error('검색엔진 초기화 실패:', err);
 });

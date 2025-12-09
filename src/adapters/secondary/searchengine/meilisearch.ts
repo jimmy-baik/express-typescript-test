@@ -119,6 +119,10 @@ export class MeilisearchAdapter implements ISearchEngine {
         const index = this.client.index(this.indexName);
 
         const searchResponse = await index.search(query, {
+            hybrid: { // 검색시 semantic 연관성도 일부 반영하기로 한다. (embedding 생성은 meilisearch 단에서 다시 embedding provider를 호출해서 처리한다.)
+                embedder: 'default',
+                semanticRatio: 0.3 // semantic ratio가 0이면 keyword 결과만 반환. 1이면 무조건 vector 검색결과만 반환.
+            },
             filter: `feedId = ${feedId}`,
             limit: 1000, // 임의로 최대 1000건까지 제한
             attributesToRetrieve: ['postId', 'submittedAt', 'originalUrl', 'textContent', 'title', 'generatedSummary'],

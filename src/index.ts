@@ -107,7 +107,7 @@ app.use(passport.session());
 const KAKAO_CALLBACK_URL = process.env.CURRENT_SERVER_ROOT_URL + '/api/auth/kakao/callback';
 passport.use(new KakaoStrategy({
     clientID: process.env.KAKAO_APP_KEY || '',
-    clientSecret: '', // client secret은 사용하지 않는 것으로 가정한다.
+    clientSecret: process.env.KAKAO_CLIENT_SECRET || '',
     callbackURL: KAKAO_CALLBACK_URL
 }, async (accessToken, refreshToken, profile, done) => {
     try {

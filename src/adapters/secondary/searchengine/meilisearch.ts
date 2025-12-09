@@ -23,15 +23,15 @@ export class MeilisearchAdapter implements ISearchEngine {
     }
 
     async initializeIndex(): Promise<void> {
-        // try {
-        //     // index가 이미 존재하는지 확인한다. 있으면 초기화를 중단하고 바로 종료
-        //     await this.client.getIndex(this.indexName);
-        //     return;
-        // } catch (error) {
-        //     // index가 존재하지 않으면 생성한다.
-        //     console.log('meilisearch index가 존재하지 않는 것 같습니다. 생성합니다..');
-        //     await this.client.createIndex(this.indexName, { primaryKey: 'postId' });
-        // }
+        try {
+            // index가 이미 존재하는지 확인한다. 있으면 초기화를 중단하고 바로 종료
+            await this.client.getIndex(this.indexName);
+            return;
+        } catch (error) {
+            // index가 존재하지 않으면 생성한다.
+            console.log('meilisearch index가 존재하지 않는 것 같습니다. 생성합니다..');
+            await this.client.createIndex(this.indexName, { primaryKey: 'postId' });
+        }
 
         // index가 생성되었으면 설정을 진행한다.
         const index = this.client.index(this.indexName);

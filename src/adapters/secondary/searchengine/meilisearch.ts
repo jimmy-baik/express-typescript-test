@@ -8,6 +8,7 @@ dotenv.config();
 
 const MEILISEARCH_INDEX_NAME = "feed_posts";
 const EMBEDDING_DIMENSION = 768;
+const DEFAULT_VECTOR_K = 200;
 
 export class MeilisearchAdapter implements ISearchEngine {
     private client: MeiliSearch;
@@ -134,85 +135,31 @@ export class MeilisearchAdapter implements ISearchEngine {
         excludeIds: number[],
         k?: number
     ): Promise<FeedPostSearchResult[]> {
-        // k 값이 제공되면 단일 전략으로 검색
-        if (k !== undefined) {
-            return this.searchWithKnnStrategy(embedding, feedId, limit, excludeIds, k);
+
+
+        const effectiveK = k ?? DEFAULT_VECTOR_K;
+        const fetchLimit = Math.min(effectiveK, limit + excludeIds.length);
+
+        const results = await this.searchWithKnnStrategy(
+            embedding,
+            feedId,
+            fetchLimit,
+            excludeIds,
+            effectiveK
+        );
+
+        // 결과가 부족하면 전체 게시글을 검색해서 추가로 결과를 얻는다.
+        if (results.length < limit) {
+            const additionalResults = await this.searchAllFeedPosts(
+                feedId,
+                limit - results.length,
+                [...excludeIds, ...results.map(result => result.postId)]
+            );
+
+            results.push(...additionalResults);
         }
 
-        // 제일 좁은 범위의 연관성 검색부터 시작해서 점점 범위를 넓혀가는 검색 전략을 여러 개 선언해놓는다.
-        const searchStrategies = [
-            {
-                name: 'knn_50',
-                k: 50
-            },
-            {
-                name: 'knn_100',
-                k: 100
-            },
-            {
-                name: 'knn_200',
-                k: 200
-            },
-            // 그래도 결과가 충분하지 않으면 최근 게시글 중 연관도 높은 것부터 검색
-            {
-                name: 'recent_with_relevance',
-                k: 20,
-                recentDays: 7
-            },
-            // fallback : 아직 보지 않은 것만 제외하고 모두 검색
-            {
-                name: 'fallback_all',
-                k: undefined
-            }
-        ];
-
-        // 충분한 결과를 얻을 때까지 범위를 넓혀가며 조회한다.
-        for (const strategy of searchStrategies) {
-            try {
-                let results: FeedPostSearchResult[];
-
-                if (strategy.name === 'recent_with_relevance') {
-                    // 최근 7일 이내의 게시글 필터링
-                    const sevenDaysAgo = new Date();
-                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - (strategy.recentDays || 7));
-                    const filter = `feedId = ${feedId} AND submittedAt >= "${sevenDaysAgo.toISOString()}"`;
-                    
-                    results = await this.searchWithVectorAndFilter(
-                        embedding,
-                        filter,
-                        limit,
-                        excludeIds,
-                        strategy.k || 20
-                    );
-                } else if (strategy.name === 'fallback_all') {
-                    // 모든 게시글 불러오기
-                    results = await this.searchAllFeedPosts(feedId, limit, excludeIds);
-                } else {
-                    // 벡터 검색
-                    results = await this.searchWithKnnStrategy(
-                        embedding,
-                        feedId,
-                        limit,
-                        excludeIds,
-                        strategy.k || 50
-                    );
-                }
-
-                // 충분한 조회결과가 나왔다면 결과를 반환한다.
-                if (results.length >= limit || strategy.name === 'fallback_all') {
-                    console.log(`Used search strategy: ${strategy.name}, found ${results.length} results`);
-                    return results;
-                }
-                console.log(`Search strategy ${strategy.name} found ${results.length} results. moving on..`);
-            } catch (error) {
-                // 오류 발생시 다음 전략으로 넘어간다
-                console.warn(`Search strategy ${strategy.name} failed:`, error);
-                continue;
-            }
-        }
-
-        // 모든 전략이 실패할 경우 빈 배열을 반환한다.
-        return [];
+        return results.slice(0, limit);
     }
 
     async searchAllFeedPosts(
@@ -241,7 +188,7 @@ export class MeilisearchAdapter implements ISearchEngine {
     }
 
     /**
-     * k 값이 제공된 경우 단일 KNN 전략으로 검색을 수행하는 함수
+     * feed id와 k 값이 제공된 경우 단일 feed 내 documents에 대한 검색을 수행하는 함수
      */
     private async searchWithKnnStrategy(
         embedding: number[],

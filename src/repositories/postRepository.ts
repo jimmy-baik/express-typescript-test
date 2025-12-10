@@ -1,15 +1,14 @@
 import type { Post, FeedPost } from '@models/posts';
-import { opensearchClient, OPENSEARCH_INDEX_NAME } from '@adapters/secondary/opensearch';
+import { ISearchEngine } from '@adapters/secondary/searchengine/searchEngine.interface';
 import db from '@adapters/secondary/db/client';
 import { postsTable, feedPostsTable } from '@adapters/secondary/db/schema';
 import { eq, and, inArray, desc } from 'drizzle-orm';
-import { dateToUnixTimestamp } from '@system/timezone';
 
 export class PostRepository {
     private db: typeof db;
-    private searchEngine: typeof opensearchClient;
+    private searchEngine: ISearchEngine;
 
-    constructor(dbClient: typeof db, searchEngineClient: typeof opensearchClient) {
+    constructor(dbClient: typeof db, searchEngineClient: ISearchEngine) {
         this.db = dbClient;
         this.searchEngine = searchEngineClient;
     }
@@ -98,14 +97,12 @@ export class PostRepository {
         const searchDocument = {
             ...post,
             feedId: feedId,
-            submittedAt: dateToUnixTimestamp(submittedAt),
+            submittedAt: submittedAt,
             ownerUserId: ownerUserId,
         }
 
-        await this.searchEngine.index({
-            index: OPENSEARCH_INDEX_NAME,
-            body: searchDocument
-        });
+        await this.searchEngine.indexFeedPost(searchDocument);
+
     }
 
     private toDomainPost(post: typeof postsTable.$inferSelect): Post {

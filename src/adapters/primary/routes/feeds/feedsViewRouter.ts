@@ -1,22 +1,20 @@
 import express from 'express';
-import { stripHtml } from "string-strip-html";
 import db from '@adapters/secondary/db/client';
-import { opensearchClient } from '@adapters/secondary/opensearch';
+import { getSearchEngine } from '@adapters/secondary/searchengine/searchEngineFactory';
+import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
+import { requireFeedMembership } from '@adapters/primary/middlewares/requireFeedMembership';
+import { searchPostsInFeedByEmbedding, searchPostsInFeedByKeyword } from '@services/searchService';
+import { User } from '@models/users';
 import { PostRepository } from '@repositories/postRepository';
 import { UserRepository } from '@repositories/userRepository';
 import { FeedRepository } from '@repositories/feedRepository';
-import { requireLogin } from '@adapters/primary/middlewares/requireLogin';
-import { requireFeedMembership } from '@adapters/primary/middlewares/requireFeedMembership';
-import { createPostEmbedding } from '@services/contentExtractionService';
-import { searchPostsInFeedByKeyword, searchPostsInFeedByEmbedding } from '@services/searchService';
-import { Post } from '@models/posts';
-import { User } from '@models/users';
 import { generateRandomString } from '@system/generators';
 
 const router = express.Router();
 
 // Repository 설정
-const postsRepository = new PostRepository(db, opensearchClient);
+const searchEngine = getSearchEngine(process.env.SEARCH_ENGINE_TYPE || "meilisearch");
+const postsRepository = new PostRepository(db, searchEngine);
 const feedsRepository = new FeedRepository(db);
 const usersRepository = new UserRepository(db);
 
@@ -79,8 +77,15 @@ router.get('/:feedSlug',
             });
           }
 
-          // 이전에 계산되었던 user embedding이 있으면 user embedding을 이용해서 추천 아티클을 검색한다. 없으면 최신순으로 불러온다.
-          const postsPromise = user.userEmbedding ? searchPostsInFeedByEmbedding(user.userEmbedding, feed.feedId) : postsRepository.getAllPostsInFeed(feed.feedId);
+          // 검색어가 있으면 검색결과를, 없으면 최초 추천목록을 불러온다. 각각에 맞는 검색전략을 실행한다
+          let postsPromise = null;
+          if (req.query.q !== undefined && String(req.query.q).trim() !== '') {
+            postsPromise = searchPostsInFeedByKeyword(String(req.query.q), feed.feedId);
+          } else {
+            // 이전에 계산되었던 user embedding이 있으면 user embedding을 이용해서 추천 아티클을 검색한다. 없으면 최신순으로 불러온다.
+            postsPromise = user.userEmbedding ? searchPostsInFeedByEmbedding(user.userEmbedding, feed.feedId) : postsRepository.getAllPostsInFeed(feed.feedId);
+          }
+
           postsPromise.catch(err => []);
           const userInteractionHistoryPromise = usersRepository.getUserInteractionHistory(user.userId);
 
@@ -91,7 +96,8 @@ router.get('/:feedSlug',
             posts: posts,
             userLikedPosts: userInteractionHistory.likedPostIds,
             feedSlug: req.params.feedSlug,
-            showAddContentBtn: true
+            showAddContentBtn: true,
+            userQuery: (req.query.q && String(req.query.q).trim() !== '') ? String(req.query.q) : undefined
           });
 
         }

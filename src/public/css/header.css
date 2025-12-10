@@ -41,6 +41,22 @@
     transition: all 0.3s ease;
 }
 
+.home-link {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #292929;
+    text-decoration: none;
+}
+
+.home-icon {
+    width: 20px;
+    height: 20px;
+}
+
 .logo {
     font-family: 'Charter', Georgia, serif;
     font-size: 24px;

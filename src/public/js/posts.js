@@ -304,6 +304,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // posts-list 또는 scroll-target 엘리먼트가 없으면 무한 스크롤을 사용하지 않는다.
         return;
     }
+
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const userQuery = urlParams.get('q');
+    if (userQuery) {
+        // 검색어가 입력되어 있으면 무한스크롤을 시작하지 않는다 (검색결과만 보는 경우임)
+        return;
+    }
+
     
     // feedSlug를 content-container에서 가져온다.
     const contentContainer = document.querySelector('.content-container');

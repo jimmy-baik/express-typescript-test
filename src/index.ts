@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto';
 import db from '@adapters/secondary/db/client';
 import { UserRepository } from '@repositories/userRepository';
 import { initializeOpenSearch } from '@adapters/secondary/opensearch';
+import { initializeSearchEngine } from '@adapters/secondary/searchengine/searchEngineFactory';
 
 // View 경로 (HTML 웹페이지를 반환)
 import authViewRouter from '@adapters/primary/routes/auth/authViewRouter';
@@ -42,17 +43,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 보안 헤더
-app.use(
-    helmet({
-        contentSecurityPolicy: { // CSP의 upgrade-insecure-requests 옵션은 임시로 비활성화 (TODO: https 적용 시 활성화 하기)
-            directives: {
-              "upgrade-insecure-requests" : null
-            },
-          },
-        strictTransportSecurity: false // Strict-Transport-Security 헤더는 임시로 비활성화한다. (TODO: https 적용 시 활성화 하기)
-    })
-);
+// 보안 헤더 설정
+app.use(helmet());
 
 // 세션 설정
 const sessionSecretKey = process.env.SESSION_SECRET_KEY;
@@ -65,9 +57,9 @@ app.use(session({
     saveUninitialized: false
 }));
 
-// OpenSearch 초기화
-initializeOpenSearch().catch((err) => {
-    console.error('OpenSearch 초기화 실패:', err);
+// 검색엔진 초기화
+initializeSearchEngine().catch((err) => {
+    console.error('검색엔진 초기화 실패:', err);
 });
 
 // 유저 Repository 설정
@@ -106,7 +98,7 @@ app.use(passport.session());
 const KAKAO_CALLBACK_URL = process.env.CURRENT_SERVER_ROOT_URL + '/api/auth/kakao/callback';
 passport.use(new KakaoStrategy({
     clientID: process.env.KAKAO_APP_KEY || '',
-    clientSecret: '', // client secret은 사용하지 않는 것으로 가정한다.
+    clientSecret: process.env.KAKAO_CLIENT_SECRET || '',
     callbackURL: KAKAO_CALLBACK_URL
 }, async (accessToken, refreshToken, profile, done) => {
     try {

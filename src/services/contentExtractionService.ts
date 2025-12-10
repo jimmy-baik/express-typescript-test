@@ -63,7 +63,9 @@ export async function ingestContent(url:string, feedId: number, userId: number, 
   }
 
   // feed와 post의 관계를 추가한다.
-  await postsRepository.createFeedToPostRelationship(feedId, post.postId, userId);
+  await postsRepository.createFeedToPostRelationship(feedId, post.postId, userId).catch((err) => {
+    console.log(err);
+  });
 }
 
 

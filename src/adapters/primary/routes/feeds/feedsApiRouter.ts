@@ -111,7 +111,9 @@ router.post('/:feedSlug/url',
         const originalUrl = String(req.body.url);
 
         // ingest 작업 예약
-        ingestContent(originalUrl, feed.feedId, userId, postsRepository);
+        ingestContent(originalUrl, feed.feedId, userId, postsRepository).catch((err) => {
+            console.log(err);
+        });
 
         // 작업 예약 후 바로 종료
         res.redirect(`/feeds/${feedSlug}`);

@@ -98,7 +98,7 @@ app.use(passport.session());
 const KAKAO_CALLBACK_URL = process.env.CURRENT_SERVER_ROOT_URL + '/api/auth/kakao/callback';
 passport.use(new KakaoStrategy({
     clientID: process.env.KAKAO_APP_KEY || '',
-    clientSecret: process.env.KAKAO_CLIENT_SECRET || '',
+    clientSecret: process.env.KAKAO_APP_CLIENT_SECRET || '',
     callbackURL: KAKAO_CALLBACK_URL
 }, async (accessToken, refreshToken, profile, done) => {
     try {

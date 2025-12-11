@@ -732,6 +732,50 @@ body {
     position: relative;
 }
 
+.center-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1200;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.center-modal.is-open {
+    display: flex;
+}
+
+.center-modal__dialog {
+    width: 100%;
+    max-width: 520px;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    color: #6b6b6b;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: #292929;
+}
+
 .login-title {
     font-size: 28px;
     font-weight: 700;

@@ -7,10 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/contents.css">
     <script defer src="/js/posts.js" type="module"></script>
+    <script async src="/js/components.js"></script>
 </head>
 <body class="page-feeds">
 
-    <%- include('partials/header.ejs') %>
+    <div is="custom-navbar" class="header"></div>
 
     <!-- 메인 컨텐츠 -->
     <main class="main-content">

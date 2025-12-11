@@ -124,19 +124,6 @@ class InfiniteScrollFeedController {
         return article;
     }
 
-    // async handleScroll() {
-    //     if (this.isLoading || !this.hasMore) return;
-
-    //     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    //     const windowHeight = window.innerHeight;
-    //     const documentHeight = document.documentElement.scrollHeight;
-
-    //     // 스크롤이 200px 남았으면 더 많은 추천 게시글을 불러온다.
-    //     if (scrollTop + windowHeight >= documentHeight - 200) {
-    //         await this.loadMorePosts();
-    //     }
-    // }
-
     async loadMorePosts() {
         
         if (this.isLoading || !this.hasMore) return;
@@ -265,35 +252,32 @@ function toggleLike(postId, heartIcon) {
 }
 
 
-
-function deletePost(postId) {
-    if (confirm('게시글을 삭제하시겠습니까?')) {
-        fetch(`/posts/${postId}`, {
-            method: 'DELETE',
-            redirect: 'follow'
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('삭제에 실패했습니다.');
-                }
-
-                if (response.redirected) {
-                    window.location.href = response.url;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('삭제 중 오류가 발생했습니다.');
-            });
-    }
-}
-
 function toggleAccordion(clickedAccordion) {    
     // 클릭된 아코디언을 토글한다
     clickedAccordion.classList.toggle('expanded');
 }
 
+function copyToClipboard() {
 
+    const inviteUrl = document.getElementById('inviteUrl').value;
+
+    const copyBtn = document.getElementById('copyBtn');
+    
+    navigator.clipboard.writeText(inviteUrl).then(function() {
+        // 복사 성공 시 버튼 텍스트 변경
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = '복사됨!';
+        copyBtn.classList.remove('not-copied');
+        copyBtn.classList.add('copied');
+        
+        // 2초 후 원래 텍스트로 복원
+        setTimeout(function() {
+            copyBtn.textContent = originalText;
+            copyBtn.classList.remove('copied');
+            copyBtn.classList.add('not-copied');
+        }, 2000);
+    })
+}
 
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -370,5 +354,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // 복사 버튼 클릭시 이벤트 리스너
+    const copyBtn = document.getElementById('copyBtn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            copyToClipboard();
+        });
+    }
 
 });

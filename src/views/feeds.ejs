@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/header.css">
     <link rel="stylesheet" href="/css/feeds-styles.css">
+    <script defer src="/js/posts.js" type="module"></script>
 </head>
 <body>
 
@@ -89,23 +90,6 @@
         </div>
     </main>
 </body>
-<script src="/js/user-engagements.mjs" type="module"></script>
-<script>
-    // 게시글 열람이력 추적
-    document.addEventListener('DOMContentLoaded', function() {
-        const feedsList = document.querySelector('.feeds-list');
-        if (feedsList) {
-            feedsList.addEventListener('click', function(e) {
-                const postLink = e.target.closest('a[data-post-id]');
-                if (postLink) {
-                    const postId = postLink.getAttribute('data-post-id');
-                    if (postId) {
-                        logUserVisitedPost(postId);
-                    }
-                }
-            });
-        }
-    });
-</script>
+
 </html>
 

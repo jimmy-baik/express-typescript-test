@@ -1,5 +1,3 @@
-import { logUserVisitedPost } from './user-engagements.mjs';
-
 class InfiniteScrollFeedController {
     constructor(feedSlug) {
         this.currentPage = 1;
@@ -279,25 +277,41 @@ function copyToClipboard() {
     })
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+function logUserVisitedPost(postId) {
+    
+    fetch(`/api/posts/${postId}/viewed`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('게시글 열람이력 추적에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('게시글 열람이력 기록 중 오류가 발생했습니다:', error);
+    });
+}
+
+function setUpInfiniteScroll() {
 
     const postsList = document.querySelector('.posts-list');
     const scrollTarget = document.querySelector('#scroll-target');
 
     if (!postsList || !scrollTarget) {
         // posts-list 또는 scroll-target 엘리먼트가 없으면 무한 스크롤을 사용하지 않는다.
-        return;
+        throw new Error('posts-list 또는 scroll-target 엘리먼트가 없습니다.');
     }
-
 
     const urlParams = new URLSearchParams(window.location.search);
     const userQuery = urlParams.get('q');
     if (userQuery) {
         // 검색어가 입력되어 있으면 무한스크롤을 시작하지 않는다 (검색결과만 보는 경우임)
-        return;
+        throw new Error('검색어가 입력되어 있으면 무한스크롤을 시작하지 않습니다.');
     }
 
-    
     // feedSlug를 content-container에서 가져온다.
     const contentContainer = document.querySelector('.content-container');
     const feedSlug = contentContainer ? contentContainer.getAttribute('data-feed-slug') : null;
@@ -354,6 +368,40 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+}
+
+function setUpFeedsOverviewList() {
+
+    const feedsList = document.querySelector('.feeds-list');
+    if (!feedsList) {
+        throw new Error('feeds-list 엘리먼트가 없습니다.');
+    }
+
+    feedsList.addEventListener('click', function(e) {
+        const postLink = e.target.closest('a[data-post-id]');
+        if (postLink) {
+            const postId = postLink.getAttribute('data-post-id');
+            if (postId) {
+                logUserVisitedPost(postId);
+            }
+        }
+    });
+
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    try {
+        setUpFeedsOverviewList();
+    } catch (error) {
+        console.log('피드 개요 리스트 init 건너뜀')
+    }
+
+    try {
+        setUpInfiniteScroll();
+    } catch (error) {
+        console.log('무한스크롤 init 건너뜀')
+    }
 
     // 복사 버튼 클릭시 이벤트 리스너
     const copyBtn = document.getElementById('copyBtn');

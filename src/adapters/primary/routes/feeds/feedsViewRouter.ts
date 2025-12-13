@@ -49,18 +49,6 @@ router.get('/',
     }
 );
 
-// 새 피드 작성 페이지
-router.get('/new',
-    requireLogin,
-    async (req, res, next) => {
-        try {
-            res.render('new-feed', {title: '피드 추가하기'});
-        } catch (err) {
-            next(err);
-        }
-    }
-);
-
 // 단일 피드 조회 (피드의 최초 추천 게시글 열람)
 router.get('/:feedSlug',
     requireLogin,

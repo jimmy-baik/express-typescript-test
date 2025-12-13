@@ -1,16 +1,15 @@
+import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as KakaoStrategy } from 'passport-kakao';
-import bcrypt from 'bcrypt';
-import dotenv from 'dotenv';
+
 import helmet from 'helmet';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import db from '@adapters/secondary/db/client';
 import { UserRepository } from '@repositories/userRepository';
-import { initializeOpenSearch } from '@adapters/secondary/opensearch';
 import { initializeSearchEngine } from '@adapters/secondary/searchengine/searchEngineFactory';
 
 // View 경로 (HTML 웹페이지를 반환)
@@ -21,9 +20,6 @@ import authApiRouter from '@adapters/primary/routes/auth/authApiRouter';
 import feedsApiRouter from '@adapters/primary/routes/feeds/feedsApiRouter';
 import postsApiRouter from '@adapters/primary/routes/posts/postsApiRouter';
 
-
-// 환경변수 불러오기
-dotenv.config();
 
 const app = express();
 const port = 3002;

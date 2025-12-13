@@ -1,7 +1,4 @@
-import dotenv from 'dotenv';
 import { GoogleGenAI } from "@google/genai";
-
-dotenv.config();
 
 const EMBEDDING_API_URL = process.env.EMBEDDING_API_URL || null;
 const LLMAPIKey = process.env.GEMINI_API_KEY || null;

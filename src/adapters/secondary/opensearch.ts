@@ -1,7 +1,5 @@
 import { Client } from "@opensearch-project/opensearch";
-import dotenv from 'dotenv';
 
-dotenv.config();
 
 export const OPENSEARCH_INDEX_NAME = "feed_posts";
 const EMBEDDING_DIMENSION = 768;

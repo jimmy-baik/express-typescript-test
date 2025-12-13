@@ -1,10 +1,7 @@
 import { ISearchEngine, FeedPostSearchResult } from "./searchEngine.interface";
-import { MeiliSearch, EnqueuedTask } from "meilisearch";
-import dotenv from 'dotenv';
+import { MeiliSearch } from "meilisearch";
 import { FeedPost } from "@models/posts";
-import { NoopLogger } from "drizzle-orm";
 
-dotenv.config();
 
 const MEILISEARCH_INDEX_NAME = "feed_posts";
 const EMBEDDING_DIMENSION = 768;
@@ -24,9 +21,9 @@ export class MeilisearchAdapter implements ISearchEngine {
 
     async initializeIndex(): Promise<void> {
         try {
-            // index가 이미 존재하는지 확인한다. 있으면 초기화를 중단하고 바로 종료
+            // index가 이미 존재하는지 확인한다.
             await this.client.getIndex(this.indexName);
-            return;
+            console.log('meilisearch index가 존재합니다.');
         } catch (error) {
             // index가 존재하지 않으면 생성한다.
             console.log('meilisearch index가 존재하지 않는 것 같습니다. 생성합니다..');

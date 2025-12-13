@@ -14,7 +14,6 @@ import { initializeOpenSearch } from '@adapters/secondary/opensearch';
 import { initializeSearchEngine } from '@adapters/secondary/searchengine/searchEngineFactory';
 
 // View 경로 (HTML 웹페이지를 반환)
-import authViewRouter from '@adapters/primary/routes/auth/authViewRouter';
 import feedsViewRouter from '@adapters/primary/routes/feeds/feedsViewRouter';
 
 // API 경로 (JSON 응답을 반환)
@@ -145,7 +144,6 @@ passport.deserializeUser(async (userId: number, done) => {
 });
 
 // View 경로 등록
-app.use('/', authViewRouter);
 app.use('/feeds', feedsViewRouter);
 
 

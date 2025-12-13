@@ -11,7 +11,7 @@
 </head>
 <body class="page-posts">
 
-    <%- include('partials/header.ejs') %>
+    <div is="custom-navbar" class="header" data-feed-slug="<%= typeof feedSlug !== 'undefined' ? feedSlug : '' %>"></div>
 
     <main class="main-content">
         <div class="content-container" data-feed-slug="<%= typeof feedSlug !== 'undefined' ? feedSlug : '' %>">

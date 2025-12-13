@@ -682,6 +682,7 @@ body {
     background: #FEE500;
     color: #000000;
     text-decoration: none;
+    text-wrap: pretty;
     border-radius: 8px;
     font-weight: 600;
     font-size: 16px;

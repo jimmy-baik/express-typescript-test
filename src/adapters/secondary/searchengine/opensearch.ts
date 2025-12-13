@@ -1,10 +1,7 @@
 import { Client } from "@opensearch-project/opensearch";
-import dotenv from 'dotenv';
 import { ISearchEngine, FeedPostSearchResult } from "./searchEngine.interface";
 import { FeedPost } from "@models/posts";
-import { dateToUnixTimestamp, unixTimestampToDate } from "@system/timezone";
 
-dotenv.config();
 
 const OPENSEARCH_INDEX_NAME = "feed_posts";
 const EMBEDDING_DIMENSION = 768;

@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { extract, ArticleData } from '@extractus/article-extractor';
 import { Post, ExtractedContent } from '@models/posts';
 import { PostRepository } from '@repositories/postRepository';

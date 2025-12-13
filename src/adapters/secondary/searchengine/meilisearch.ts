@@ -1,10 +1,7 @@
 import { ISearchEngine, FeedPostSearchResult } from "./searchEngine.interface";
-import { MeiliSearch, EnqueuedTask } from "meilisearch";
-import dotenv from 'dotenv';
+import { MeiliSearch } from "meilisearch";
 import { FeedPost } from "@models/posts";
-import { NoopLogger } from "drizzle-orm";
 
-dotenv.config();
 
 const MEILISEARCH_INDEX_NAME = "feed_posts";
 const EMBEDDING_DIMENSION = 768;

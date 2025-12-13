@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
     <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/header.css">
-    <link rel="stylesheet" href="/css/posts-styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script defer src="/js/posts.js" type="module"></script>
 </head>
-<body>
+<body class="page-posts">
 
     <%- include('partials/header.ejs') %>
 
@@ -126,13 +126,13 @@
                 <div class="no-posts">
                     <p>아직 게시글이 없어요. 첫 컨텐츠를 추가해 보세요.</p>
                     <% if (typeof feedSlug !== 'undefined') { %>
-                        <a href="/feeds/<%= feedSlug %>/new-url" class="add-content-btn" style="margin-top: 20px;">
+                        <button type="button" id="new-url-trigger" class="add-content-btn">
                             <svg class="add-content-btn-icon" viewBox="0 0 24 24">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
                             컨텐츠 추가하기
-                        </a>
+                        </button>
                     <% } %>
                 </div>
             <% } %>
@@ -140,9 +140,55 @@
         <div id="scroll-target"></div>
     </main>
 
+    <!-- 새 URL 추가 모달 -->
+    <% if (typeof feedSlug !== 'undefined') { %>
+        <div class="center-modal" id="new-url-modal">
+            <div class="center-modal__dialog">
+                <div class="content-container">
+                    <div class="login-container" style="position: relative;">
+                        <button type="button" class="modal-close" id="new-url-modal-close">&#x00D7;</button>
+                        <h1 class="create-feed-text">컨텐츠 추가하기</h1>
+                        
+                        <form id="newUrlForm" action="/api/feeds/<%= feedSlug %>/url" method="POST">
+                            <div class="form-group">
+                                <label for="url">추가할 컨텐츠의 URL을 입력해주세요.</label>
+                                <input type="url" id="url" name="url" placeholder="https://example.com" required>
+                            </div>
+                            
+                            <div class="actions">
+                                <button type="submit" class="btn">저장하기</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 새 초대 링크 모달 -->
+        <div class="center-modal" id="new-invite-modal">
+            <div class="center-modal__dialog">
+                <div class="content-container">
+                    <div class="login-container" style="position: relative;">
+                        <button type="button" class="modal-close" id="new-invite-modal-close">&#x00D7;</button>
+                        <div class="form-group">
+                            <label for="inviteUrl">링크를 복사해서 초대할 사람에게 보내주세요!</label>
+                            <div class="invite-url-container">
+                                <input type="text" id="inviteUrl" name="inviteUrl" value="" readonly>
+                                <button type="button" id="copyBtn" class="copy-button not-copied">복사하기</button>
+                            </div>
+                        </div>
+                        
+                        <div class="actions">
+                            <button type="button" class="btn btn-secondary" id="new-invite-close-btn">닫기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
 </body>
-<script src="/js/user-engagements.mjs" type="module"></script>
-<script src="/js/posts.js" type="module"></script>
+
 
 </html>
 

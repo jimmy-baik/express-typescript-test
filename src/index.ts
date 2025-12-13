@@ -14,7 +14,6 @@ import { initializeOpenSearch } from '@adapters/secondary/opensearch';
 import { initializeSearchEngine } from '@adapters/secondary/searchengine/searchEngineFactory';
 
 // View 경로 (HTML 웹페이지를 반환)
-import authViewRouter from '@adapters/primary/routes/auth/authViewRouter';
 import feedsViewRouter from '@adapters/primary/routes/feeds/feedsViewRouter';
 
 // API 경로 (JSON 응답을 반환)
@@ -35,7 +34,13 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 //정적파일 설정
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(
+    path.join(__dirname, 'public'),
+    {
+        maxAge: '1d',
+        lastModified: true
+    }
+));
 
 // 미들웨어 설정
 
@@ -138,13 +143,7 @@ passport.deserializeUser(async (userId: number, done) => {
     }
 });
 
-// 기본 경로 등록
-app.get('/', (req, res) => {
-    res.render('index', { title: 'Smallfeed - 내가 직접 만드는 우리만의 피드' });
-});
-
 // View 경로 등록
-app.use('/', authViewRouter);
 app.use('/feeds', feedsViewRouter);
 
 

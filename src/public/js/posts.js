@@ -1,5 +1,3 @@
-import { logUserVisitedPost } from './user-engagements.mjs';
-
 class InfiniteScrollFeedController {
     constructor(feedSlug) {
         this.currentPage = 1;
@@ -124,19 +122,6 @@ class InfiniteScrollFeedController {
         return article;
     }
 
-    // async handleScroll() {
-    //     if (this.isLoading || !this.hasMore) return;
-
-    //     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    //     const windowHeight = window.innerHeight;
-    //     const documentHeight = document.documentElement.scrollHeight;
-
-    //     // 스크롤이 200px 남았으면 더 많은 추천 게시글을 불러온다.
-    //     if (scrollTop + windowHeight >= documentHeight - 200) {
-    //         await this.loadMorePosts();
-    //     }
-    // }
-
     async loadMorePosts() {
         
         if (this.isLoading || !this.hasMore) return;
@@ -239,6 +224,63 @@ class InfiniteScrollFeedController {
     }
 }
 
+export class ModalController {
+    constructor(triggerElementId=null, modalElementId=null, closeButtonElementId=null) {
+        this.findElements(triggerElementId, modalElementId, closeButtonElementId);
+    }
+
+    findElements(triggerElementId, modalElementId, closeButtonElementId) {
+        if (!triggerElementId || !modalElementId || !closeButtonElementId) {
+            throw new Error('triggerElementId, modalElementId, closeButtonElementId가 모두 지정되지 않았습니다.');
+        }
+        this.triggerElement = document.getElementById(triggerElementId);
+        this.modalElement = document.getElementById(modalElementId);
+        this.closeButtonElement = document.getElementById(closeButtonElementId);
+        this.documentBody = document.body;
+
+        if (!this.triggerElement || !this.modalElement || !this.closeButtonElement || !this.documentBody) {
+            throw new Error('triggerElement, modalElement, closeButtonElement를 찾을 수 없습니다.');
+        }
+    }
+
+    openModal() {
+        this.modalElement?.classList.add('is-open');
+        this.documentBody.classList.add('modal-open');
+        this.closeButtonElement?.focus();
+
+    }
+
+    closeModal() {
+        this.modalElement?.classList.remove('is-open');
+        this.documentBody.classList.remove('modal-open');
+        this.triggerElement?.focus();
+    }
+
+    initEventListeners() {
+        const openModal = (e) => {
+            e.preventDefault();
+            this.openModal();
+        };
+
+        const closeModal = (e) => {
+            e.preventDefault();
+            this.closeModal();
+        };
+
+        this.triggerElement.addEventListener('click', openModal);
+        this.closeButtonElement.addEventListener('click', closeModal);
+        this.modalElement.addEventListener('click', (event) => {
+            if (event.target === this.modalElement) {
+                closeModal();
+            }
+        });
+    }
+
+}
+
+// html inline 스크립트에서 바로 로드
+window.ModalController = ModalController;
+
 function toggleLike(postId, heartIcon) {
     fetch(`/api/posts/${postId}/like`, {
         method: 'POST',
@@ -265,55 +307,90 @@ function toggleLike(postId, heartIcon) {
 }
 
 
-
-function deletePost(postId) {
-    if (confirm('게시글을 삭제하시겠습니까?')) {
-        fetch(`/posts/${postId}`, {
-            method: 'DELETE',
-            redirect: 'follow'
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('삭제에 실패했습니다.');
-                }
-
-                if (response.redirected) {
-                    window.location.href = response.url;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('삭제 중 오류가 발생했습니다.');
-            });
-    }
-}
-
 function toggleAccordion(clickedAccordion) {    
     // 클릭된 아코디언을 토글한다
     clickedAccordion.classList.toggle('expanded');
 }
 
+function showToast(message, duration = 3000, type = '') {
 
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, duration);
+}
 
-document.addEventListener('DOMContentLoaded', function() {
+function copyToClipboard() {
+
+    const inviteUrl = document.getElementById('inviteUrl').value;
+
+    const copyBtn = document.getElementById('copyBtn');
+    
+    navigator.clipboard.writeText(inviteUrl).then(function() {
+        // 복사 성공 시 버튼 텍스트 변경
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = '복사됨!';
+        copyBtn.classList.remove('not-copied');
+        copyBtn.classList.add('copied');
+        
+        // 2초 후 원래 텍스트로 복원
+        setTimeout(function() {
+            copyBtn.textContent = originalText;
+            copyBtn.classList.remove('copied');
+            copyBtn.classList.add('not-copied');
+        }, 2000);
+    })
+}
+
+function logUserVisitedPost(postId) {
+    
+    fetch(`/api/posts/${postId}/viewed`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('게시글 열람이력 추적에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('게시글 열람이력 기록 중 오류가 발생했습니다:', error);
+    });
+}
+
+function setUpInfiniteScroll() {
 
     const postsList = document.querySelector('.posts-list');
     const scrollTarget = document.querySelector('#scroll-target');
 
     if (!postsList || !scrollTarget) {
         // posts-list 또는 scroll-target 엘리먼트가 없으면 무한 스크롤을 사용하지 않는다.
-        return;
+        throw new Error('posts-list 또는 scroll-target 엘리먼트가 없습니다.');
     }
-
 
     const urlParams = new URLSearchParams(window.location.search);
     const userQuery = urlParams.get('q');
     if (userQuery) {
         // 검색어가 입력되어 있으면 무한스크롤을 시작하지 않는다 (검색결과만 보는 경우임)
-        return;
+        throw new Error('검색어가 입력되어 있으면 무한스크롤을 시작하지 않습니다.');
     }
 
-    
     // feedSlug를 content-container에서 가져온다.
     const contentContainer = document.querySelector('.content-container');
     const feedSlug = contentContainer ? contentContainer.getAttribute('data-feed-slug') : null;
@@ -370,5 +447,238 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+}
+
+function setUpFeedsOverviewList() {
+
+    const feedsList = document.querySelector('.feeds-list');
+    if (!feedsList) {
+        throw new Error('feeds-list 엘리먼트가 없습니다.');
+    }
+
+    feedsList.addEventListener('click', function(e) {
+        const postLink = e.target.closest('a[data-post-id]');
+        if (postLink) {
+            const postId = postLink.getAttribute('data-post-id');
+            if (postId) {
+                logUserVisitedPost(postId);
+            }
+        }
+    });
+
+}
+
+function setUpNewFeedModal() {
+    const modalController = new ModalController('new-feed-trigger', 'new-feed-modal', 'new-feed-modal-close');
+    modalController.initEventListeners();
+
+    const emptyTrigger = document.getElementById('new-feed-trigger-empty');
+    if (emptyTrigger) {
+        emptyTrigger.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('new-feed-modal').classList.add('is-open');
+            document.body.classList.add('modal-open');
+            document.getElementById('new-feed-modal-close').focus();
+        });
+    }
+
+    const feedForm = document.getElementById('feedForm');
+    if (feedForm) {
+        feedForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value;
+            const data = {
+                title: title
+            };
+            
+            try {
+                const response = await fetch('/api/feeds', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    modalController.closeModal();
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || '피드 생성에 실패했습니다.');
+                }
+            } catch (error) {
+                alert('피드 생성 중 오류가 발생했습니다.');
+            }
+        });
+    }
+}
+
+function setUpNewInviteContentModal() {
+    const contentContainer = document.querySelector('.content-container');
+    const feedSlug = contentContainer ? contentContainer.getAttribute('data-feed-slug') : null;
+    if (!feedSlug) {
+        throw new Error('feedSlug가 없습니다.');
+    }
+
+    // 새 URL 추가 모달 설정
+    const newUrlModal = document.getElementById('new-url-modal');
+    const newUrlModalClose = document.getElementById('new-url-modal-close');
+    const newUrlTriggers = [
+        document.getElementById('new-url-trigger'),
+        document.getElementById('new-url-trigger-navbar')
+    ].filter(Boolean);
+    
+    let newUrlModalController = null;
+    if (newUrlModal && newUrlModalClose && newUrlTriggers.length > 0) {
+        // 첫 번째 트리거로 ModalController 초기화
+        newUrlModalController = new ModalController(
+            newUrlTriggers[0].id, 
+            'new-url-modal', 
+            'new-url-modal-close'
+        );
+        newUrlModalController.initEventListeners();
+        
+        // 나머지 트리거 버튼들도 모달 열기 기능 추가
+        newUrlTriggers.slice(1).forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                newUrlModalController.openModal();
+            });
+        });
+    }
+
+    // 새 URL 폼 제출 처리
+    const newUrlForm = document.getElementById('newUrlForm');
+    if (newUrlForm) {
+        newUrlForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const url = document.getElementById('url').value;
+            
+            try {
+                const response = await fetch(`/api/feeds/${feedSlug}/url`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                if (response.ok || response.redirected) {
+                    newUrlModalController.closeModal();
+                    showToast('컨텐츠 추가 성공!<br>잠시 후 피드에 나타나요.', 3000, 'success');
+                } else {
+                    // JSON 에러 응답 시도
+                    try {
+                        const error = await response.json();
+                        alert(error.message || '컨텐츠 추가에 실패했습니다.');
+                    } catch {
+                        alert('컨텐츠 추가에 실패했습니다.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('컨텐츠 추가 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    // 새 초대 링크 모달 설정
+    const newInviteModalController = new ModalController('new-invite-trigger', 'new-invite-modal', 'new-invite-modal-close');
+    newInviteModalController.initEventListeners();
+
+    // 닫기 버튼 이벤트
+    const newInviteCloseBtn = document.getElementById('new-invite-close-btn');
+    if (newInviteCloseBtn) {
+        newInviteCloseBtn.addEventListener('click', function() {
+            newInviteModalController.closeModal();
+        });
+    }
+
+    // 초대 링크 생성 모달 열기
+    const newInviteTrigger = document.getElementById('new-invite-trigger');
+    if (newInviteTrigger) {
+        newInviteTrigger.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            try {
+                const response = await fetch(`/api/feeds/${feedSlug}/invites`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error('초대 링크 생성에 실패했습니다.');
+                }
+
+                const responseJson = await response.json();
+                const inviteUrl = responseJson.inviteUrl;
+
+
+                const modalInviteUrlInput = document.getElementById('inviteUrl');
+                if (modalInviteUrlInput) {
+                    modalInviteUrlInput.value = inviteUrl;
+                    newInviteModalController.openModal();
+                }
+
+            } catch (error) {
+                alert('초대 링크 생성에 실패했습니다.');
+            }
+        });
+    }
+
+    // 복사 버튼 클릭 이벤트
+    const copyBtn = document.getElementById('copyBtn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            const inviteUrl = document.getElementById('inviteUrl').value;
+            
+            navigator.clipboard.writeText(inviteUrl).then(function() {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '복사됨!';
+                copyBtn.classList.remove('not-copied');
+                copyBtn.classList.add('copied');
+                
+                setTimeout(function() {
+                    copyBtn.textContent = originalText;
+                    copyBtn.classList.remove('copied');
+                    copyBtn.classList.add('not-copied');
+                }, 2000);
+            }).catch(function(err) {
+                console.error('복사 실패:', err);
+                alert('링크 복사에 실패했습니다.');
+            });
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    try {
+        setUpFeedsOverviewList();
+    } catch (error) {
+        console.log('피드 개요 리스트 init 건너뜀')
+    }
+
+    try {
+        setUpInfiniteScroll();
+    } catch (error) {
+        console.log('무한스크롤 init 건너뜀')
+    }
+
+    // 복사 버튼 클릭시 이벤트 리스너
+    const copyBtn = document.getElementById('copyBtn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            copyToClipboard();
+        });
+    }
+
+    const currentUrl = window.location.pathname;
+    if (currentUrl.endsWith('/feeds')) {
+        setUpNewFeedModal();
+    } else if (currentUrl.includes('/feeds/')) {
+        setUpNewInviteContentModal();
+    }
 
 });

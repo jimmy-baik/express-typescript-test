@@ -224,7 +224,7 @@ class InfiniteScrollFeedController {
     }
 }
 
-class ModalController {
+export class ModalController {
     constructor(triggerElementId=null, modalElementId=null, closeButtonElementId=null) {
         this.findElements(triggerElementId, modalElementId, closeButtonElementId);
     }
@@ -243,36 +243,43 @@ class ModalController {
         }
     }
 
+    openModal() {
+        this.modalElement?.classList.add('is-open');
+        this.documentBody.classList.add('modal-open');
+        this.closeButtonElement?.focus();
+
+    }
+
+    closeModal() {
+        this.modalElement?.classList.remove('is-open');
+        this.documentBody.classList.remove('modal-open');
+        this.triggerElement?.focus();
+    }
+
     initEventListeners() {
-        const openModal = () => {
-            modal?.classList.add('is-open');
-            body.classList.add('modal-open');
-            closeBtn?.focus();
+        const openModal = (e) => {
+            e.preventDefault();
+            this.openModal();
         };
 
-        const closeModal = () => {
-            modal?.classList.remove('is-open');
-            body.classList.remove('modal-open');
-            trigger?.focus();
+        const closeModal = (e) => {
+            e.preventDefault();
+            this.closeModal();
         };
 
-        this.triggerElement.addEventListener('click', (event) => {
-            event.preventDefault();
-            openModal();
-        });
-
-        this.closeButtonElement.addEventListener('click', () => {
-            closeModal();
-        });
-
+        this.triggerElement.addEventListener('click', openModal);
+        this.closeButtonElement.addEventListener('click', closeModal);
         this.modalElement.addEventListener('click', (event) => {
-            if (event.target === modal) {
+            if (event.target === this.modalElement) {
                 closeModal();
             }
         });
     }
 
 }
+
+// html inline 스크립트에서 바로 로드
+window.ModalController = ModalController;
 
 function toggleLike(postId, heartIcon) {
     fetch(`/api/posts/${postId}/like`, {
@@ -439,6 +446,53 @@ function setUpFeedsOverviewList() {
 
 }
 
+function setUpNewFeedModal() {
+    const modalController = new ModalController('new-feed-trigger', 'new-feed-modal', 'new-feed-modal-close');
+    modalController.initEventListeners();
+
+    const emptyTrigger = document.getElementById('new-feed-trigger-empty');
+    if (emptyTrigger) {
+        emptyTrigger.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('new-feed-modal').classList.add('is-open');
+            document.body.classList.add('modal-open');
+            document.getElementById('new-feed-modal-close').focus();
+        });
+    }
+
+    const feedForm = document.getElementById('feedForm');
+    if (feedForm) {
+        feedForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value;
+            const data = {
+                title: title
+            };
+            
+            try {
+                const response = await fetch('/api/feeds', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    modalController.closeModal();
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || '피드 생성에 실패했습니다.');
+                }
+            } catch (error) {
+                alert('피드 생성 중 오류가 발생했습니다.');
+            }
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     try {
@@ -459,6 +513,11 @@ document.addEventListener('DOMContentLoaded', function() {
         copyBtn.addEventListener('click', function() {
             copyToClipboard();
         });
+    }
+
+    const currentUrl = window.location.pathname;
+    if (currentUrl.endsWith('/feeds')) {
+        setUpNewFeedModal();
     }
 
 });

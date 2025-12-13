@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>피드 목록</title>
     <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/contents.css">
+    <link rel="stylesheet" href="/css/styles.css">
     <script async src="/js/components.js"></script>
     <script defer src="/js/posts.js" type="module"></script>
 </head>
@@ -69,26 +69,48 @@
                 </div>
                 <!-- 새 피드 만들기 -->
                 <div class="create-feed-section">
-                    <a href="/feeds/new" class="create-feed-link">
+                    <button type="button" id="new-feed-trigger" class="create-feed-link" style="background: none; border: none; cursor: pointer; width: 100%; text-align: left;">
                         <svg class="create-feed-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg>
                         <div class="create-feed-text">피드 추가하기</div>
                         <div class="create-feed-subtext">새로운 주제의 피드를 만들어 보세요.</div>
-                    </a>
+                    </button>
                 </div>
             <% } else { %>
                 <div class="no-feeds">
                     <h2 class="no-feeds-title">피드가 없습니다</h2>
                     <p class="no-feeds-text">새 피드를 만들어 시작해보세요.</p>
-                    <a href="/feeds/new" class="cta-primary">
+                    <button type="button" id="new-feed-trigger-empty" class="cta-primary" style="background: none; border: none; cursor: pointer;">
                         <span>+ 피드 추가하기</span>
-                    </a>
+                    </button>
                 </div>
             <% } %>
         </div>
     </main>
+
+    <!-- 새 피드 추가 모달 -->
+    <div class="center-modal" id="new-feed-modal">
+        <div class="center-modal__dialog">
+            <div class="content-container">
+                <div class="form-container" style="position: relative;">
+                    <button type="button" class="modal-close" id="new-feed-modal-close">&#x00D7;</button>
+                    <form id="feedForm" action="/api/feeds" method="POST">
+                        <div class="form-group">
+                            <label for="title">피드의 주제를 입력해주세요.</label>
+                            <input type="text" id="title" name="title" placeholder="예시: 기술 트렌드, 반려동물 키우기, 영화 리뷰 .." required>
+                        </div>
+                        
+                        <div class="actions">
+                            <button type="submit" class="btn">추가하기</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

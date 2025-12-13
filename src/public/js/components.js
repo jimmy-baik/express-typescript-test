@@ -1,16 +1,14 @@
 class CustomNavbar extends HTMLDivElement {
     constructor() {
         super();
+        this.feedSlug = this.getAttribute('data-feed-slug') || null;
     }
 
     connectedCallback() {
-        this.render();
+        this.render(this.feedSlug);
     }
 
-    render() {
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const feedSlug = urlParams.get('feed');
+    render(feedSlug=null) {
 
         const renderRoot = document.createElement('div');
         renderRoot.classList.add('header-content');
@@ -22,15 +20,11 @@ class CustomNavbar extends HTMLDivElement {
                     </svg>
                 </a>
             </div>
-            <div class="search-container">
-            </div>
-            <div class="header-right">
-            </div>
-
         `;
 
         if (feedSlug && feedSlug !== '') {
-            const searchContainer = renderRoot.querySelector('.search-container');
+            const searchContainer = document.createElement('div');
+            searchContainer.classList.add('search-container');
             searchContainer.innerHTML = `
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"></circle>
@@ -41,8 +35,10 @@ class CustomNavbar extends HTMLDivElement {
                     <input type="hidden" name="feed" value="${feedSlug}" />
                 </form>
             `;
+            renderRoot.appendChild(searchContainer);
 
-            const headerRight = renderRoot.querySelector('.header-right');
+            const headerRight = document.createElement('div');
+            headerRight.classList.add('header-right');
             headerRight.innerHTML = `
                 <a href="/feeds" class="add-content-btn">
                     <svg class="people-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -60,7 +56,8 @@ class CustomNavbar extends HTMLDivElement {
                     </svg>
                     컨텐츠 추가
                 </a>
-            `
+            `;
+            renderRoot.appendChild(headerRight);
         }
 
         this.appendChild(renderRoot);

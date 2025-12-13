@@ -312,6 +312,28 @@ function toggleAccordion(clickedAccordion) {
     clickedAccordion.classList.toggle('expanded');
 }
 
+function showToast(message, duration = 3000, type = '') {
+
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, duration);
+}
+
 function copyToClipboard() {
 
     const inviteUrl = document.getElementById('inviteUrl').value;
@@ -508,9 +530,10 @@ function setUpNewInviteContentModal() {
         document.getElementById('new-url-trigger-navbar')
     ].filter(Boolean);
     
+    let newUrlModalController = null;
     if (newUrlModal && newUrlModalClose && newUrlTriggers.length > 0) {
         // 첫 번째 트리거로 ModalController 초기화
-        const newUrlModalController = new ModalController(
+        newUrlModalController = new ModalController(
             newUrlTriggers[0].id, 
             'new-url-modal', 
             'new-url-modal-close'
@@ -544,9 +567,8 @@ function setUpNewInviteContentModal() {
                 });
                 
                 if (response.ok || response.redirected) {
-                    // 서버가 redirect를 반환하므로 페이지 리로드
                     newUrlModalController.closeModal();
-                    window.location.reload();
+                    showToast('컨텐츠 추가 성공!<br>잠시 후 피드에 나타나요.', 3000, 'success');
                 } else {
                     // JSON 에러 응답 시도
                     try {

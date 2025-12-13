@@ -87,6 +87,9 @@ export class PostRepository {
             postId: postId,
             ownerUserId: ownerUserId,
             submittedAt: submittedAt,
+        }).catch((err) => {
+            console.log(err);
+            throw new Error('게시글-피드 관계 생성 실패');
         });
 
         const post = await this.getPostByPostId(postId);

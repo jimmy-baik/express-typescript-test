@@ -116,7 +116,9 @@ router.post('/:feedSlug/url',
         });
 
         // 작업 예약 후 바로 종료
-        return res.status(201);
+        return res.status(201).json({
+            message: '컨텐츠 추가 성공.'
+        });
 
     } catch (err) {
         // 에러를 다음 미들웨어로 전달

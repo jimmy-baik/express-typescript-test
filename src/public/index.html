@@ -6,6 +6,9 @@
     <title>Smallfeed - 내가 직접 만드는 우리만의 피드</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
+    <script defer src="/js/posts.js" type="module"></script>
+    <link rel="prefetch" href="/css/contents.css">
+    <link rel="prefetch" href="/js/components.js">
 </head>
 <body>
     <nav class="navigation">
@@ -320,37 +323,8 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const trigger = document.getElementById('modal-trigger');
-            const modal = document.getElementById('center-modal');
-            const closeBtn = document.getElementById('center-modal-close');
-            const body = document.body;
-
-            const openModal = () => {
-                modal?.classList.add('is-open');
-                body.classList.add('modal-open');
-                closeBtn?.focus();
-            };
-
-            const closeModal = () => {
-                modal?.classList.remove('is-open');
-                body.classList.remove('modal-open');
-                trigger?.focus();
-            };
-
-            trigger?.addEventListener('click', (event) => {
-                event.preventDefault();
-                openModal();
-            });
-
-            closeBtn?.addEventListener('click', () => {
-                closeModal();
-            });
-
-            modal?.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            });
+            const modalController = new ModalController('modal-trigger', 'center-modal', 'center-modal-close');
+            modalController.initEventListeners();
         });
     </script>
 </body>

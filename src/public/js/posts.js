@@ -224,6 +224,56 @@ class InfiniteScrollFeedController {
     }
 }
 
+class ModalController {
+    constructor(triggerElementId=null, modalElementId=null, closeButtonElementId=null) {
+        this.findElements(triggerElementId, modalElementId, closeButtonElementId);
+    }
+
+    findElements(triggerElementId, modalElementId, closeButtonElementId) {
+        if (!triggerElementId || !modalElementId || !closeButtonElementId) {
+            throw new Error('triggerElementId, modalElementId, closeButtonElementId가 모두 지정되지 않았습니다.');
+        }
+        this.triggerElement = document.getElementById(triggerElementId);
+        this.modalElement = document.getElementById(modalElementId);
+        this.closeButtonElement = document.getElementById(closeButtonElementId);
+        this.documentBody = document.body;
+
+        if (!this.triggerElement || !this.modalElement || !this.closeButtonElement || !this.documentBody) {
+            throw new Error('triggerElement, modalElement, closeButtonElement를 찾을 수 없습니다.');
+        }
+    }
+
+    initEventListeners() {
+        const openModal = () => {
+            modal?.classList.add('is-open');
+            body.classList.add('modal-open');
+            closeBtn?.focus();
+        };
+
+        const closeModal = () => {
+            modal?.classList.remove('is-open');
+            body.classList.remove('modal-open');
+            trigger?.focus();
+        };
+
+        this.triggerElement.addEventListener('click', (event) => {
+            event.preventDefault();
+            openModal();
+        });
+
+        this.closeButtonElement.addEventListener('click', () => {
+            closeModal();
+        });
+
+        this.modalElement.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+    }
+
+}
+
 function toggleLike(postId, heartIcon) {
     fetch(`/api/posts/${postId}/like`, {
         method: 'POST',

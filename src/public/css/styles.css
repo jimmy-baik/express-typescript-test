@@ -1520,6 +1520,50 @@ body.modal-open {
     border-radius: 8px;
 }
 
+.invite-url-container {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+}
+
+.invite-url-container input {
+    flex: 1;
+    height: 48px;
+}
+
+.copy-button {
+    height: 48px;
+    white-space: nowrap;
+    padding: 12px 24px;
+    min-width: fit-content;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+.copy-button.not-copied {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+.copy-button.copied {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.copy-button:hover {
+    background: #292929;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: #6b6b6b;
+}
+
+.btn-secondary:hover {
+    background-color: #5a5a5a;
+}
+
 /* header */
 
 .header {

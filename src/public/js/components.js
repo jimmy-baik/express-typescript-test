@@ -5,10 +5,10 @@ class CustomNavbar extends HTMLDivElement {
     }
 
     connectedCallback() {
-        this.render(this.feedSlug);
+        this.render();
     }
 
-    render(feedSlug=null) {
+    render() {
 
         const renderRoot = document.createElement('div');
         renderRoot.classList.add('header-content');
@@ -22,7 +22,7 @@ class CustomNavbar extends HTMLDivElement {
             </div>
         `;
 
-        if (feedSlug && feedSlug !== '') {
+        if (this.feedSlug && this.feedSlug !== '') {
             const searchContainer = document.createElement('div');
             searchContainer.classList.add('search-container');
             searchContainer.innerHTML = `
@@ -32,7 +32,7 @@ class CustomNavbar extends HTMLDivElement {
                 </svg>
                 <form method="GET" action="/feeds" style="display: contents;">
                     <input type="text" name="q" class="search-input" placeholder="검색" />
-                    <input type="hidden" name="feed" value="${feedSlug}" />
+                    <input type="hidden" name="feed" value="${this.feedSlug}" />
                 </form>
             `;
             renderRoot.appendChild(searchContainer);
@@ -40,7 +40,7 @@ class CustomNavbar extends HTMLDivElement {
             const headerRight = document.createElement('div');
             headerRight.classList.add('header-right');
             headerRight.innerHTML = `
-                <a href="/feeds" class="add-content-btn">
+                <button type="button" id="new-invite-trigger" class="add-content-btn">
                     <svg class="people-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                         <circle cx="9" cy="7" r="4"></circle>
@@ -48,14 +48,14 @@ class CustomNavbar extends HTMLDivElement {
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
                     초대
-                </a>
-                <a href="/feeds" class="add-content-btn">
+                </button>
+                <button type="button" id="new-url-trigger-navbar" class="add-content-btn">
                     <svg class="add-content-btn-icon" viewBox="0 0 24 24">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
                     컨텐츠 추가
-                </a>
+                </button>
             `;
             renderRoot.appendChild(headerRight);
         }

@@ -493,6 +493,143 @@ function setUpNewFeedModal() {
     }
 }
 
+function setUpNewInviteContentModal() {
+    const contentContainer = document.querySelector('.content-container');
+    const feedSlug = contentContainer ? contentContainer.getAttribute('data-feed-slug') : null;
+    if (!feedSlug) {
+        throw new Error('feedSlug가 없습니다.');
+    }
+
+    // 새 URL 추가 모달 설정
+    const newUrlModal = document.getElementById('new-url-modal');
+    const newUrlModalClose = document.getElementById('new-url-modal-close');
+    const newUrlTriggers = [
+        document.getElementById('new-url-trigger'),
+        document.getElementById('new-url-trigger-navbar')
+    ].filter(Boolean);
+    
+    if (newUrlModal && newUrlModalClose && newUrlTriggers.length > 0) {
+        // 첫 번째 트리거로 ModalController 초기화
+        const newUrlModalController = new ModalController(
+            newUrlTriggers[0].id, 
+            'new-url-modal', 
+            'new-url-modal-close'
+        );
+        newUrlModalController.initEventListeners();
+        
+        // 나머지 트리거 버튼들도 모달 열기 기능 추가
+        newUrlTriggers.slice(1).forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                newUrlModalController.openModal();
+            });
+        });
+    }
+
+    // 새 URL 폼 제출 처리
+    const newUrlForm = document.getElementById('newUrlForm');
+    if (newUrlForm) {
+        newUrlForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const url = document.getElementById('url').value;
+            
+            try {
+                const response = await fetch(`/api/feeds/${feedSlug}/url`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                if (response.ok || response.redirected) {
+                    // 서버가 redirect를 반환하므로 페이지 리로드
+                    newUrlModalController.closeModal();
+                    window.location.reload();
+                } else {
+                    // JSON 에러 응답 시도
+                    try {
+                        const error = await response.json();
+                        alert(error.message || '컨텐츠 추가에 실패했습니다.');
+                    } catch {
+                        alert('컨텐츠 추가에 실패했습니다.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('컨텐츠 추가 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    // 새 초대 링크 모달 설정
+    const newInviteModalController = new ModalController('new-invite-trigger', 'new-invite-modal', 'new-invite-modal-close');
+    newInviteModalController.initEventListeners();
+
+    // 닫기 버튼 이벤트
+    const newInviteCloseBtn = document.getElementById('new-invite-close-btn');
+    if (newInviteCloseBtn) {
+        newInviteCloseBtn.addEventListener('click', function() {
+            newInviteModalController.closeModal();
+        });
+    }
+
+    // 초대 링크 생성 모달 열기
+    const newInviteTrigger = document.getElementById('new-invite-trigger');
+    if (newInviteTrigger) {
+        newInviteTrigger.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            try {
+                const response = await fetch(`/api/feeds/${feedSlug}/invites`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    throw new Error('초대 링크 생성에 실패했습니다.');
+                }
+
+                const responseJson = await response.json();
+                const inviteUrl = responseJson.inviteUrl;
+
+
+                const modalInviteUrlInput = document.getElementById('inviteUrl');
+                if (modalInviteUrlInput) {
+                    modalInviteUrlInput.value = inviteUrl;
+                    newInviteModalController.openModal();
+                }
+
+            } catch (error) {
+                alert('초대 링크 생성에 실패했습니다.');
+            }
+        });
+    }
+
+    // 복사 버튼 클릭 이벤트
+    const copyBtn = document.getElementById('copyBtn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            const inviteUrl = document.getElementById('inviteUrl').value;
+            
+            navigator.clipboard.writeText(inviteUrl).then(function() {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '복사됨!';
+                copyBtn.classList.remove('not-copied');
+                copyBtn.classList.add('copied');
+                
+                setTimeout(function() {
+                    copyBtn.textContent = originalText;
+                    copyBtn.classList.remove('copied');
+                    copyBtn.classList.add('not-copied');
+                }, 2000);
+            }).catch(function(err) {
+                console.error('복사 실패:', err);
+                alert('링크 복사에 실패했습니다.');
+            });
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     try {
@@ -518,6 +655,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentUrl = window.location.pathname;
     if (currentUrl.endsWith('/feeds')) {
         setUpNewFeedModal();
+    } else if (currentUrl.includes('/feeds/')) {
+        setUpNewInviteContentModal();
     }
 
 });

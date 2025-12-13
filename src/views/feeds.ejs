@@ -6,13 +6,12 @@
     <title>피드 목록</title>
     <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
-    <script async src="/js/components.js"></script>
     <script defer src="/js/posts.js" type="module"></script>
 </head>
 <body class="page-feeds">
 
-    <div is="custom-navbar" class="header"></div>
-
+    <%- include('partials/header.ejs') %>
+    
     <!-- 메인 컨텐츠 -->
     <main class="main-content">
         <div class="content-container">
